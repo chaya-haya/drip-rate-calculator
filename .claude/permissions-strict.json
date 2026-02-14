@@ -1,0 +1,9 @@
+{
+  "allow": [
+    "Bash(git *)",
+    "Bash(npm *)",
+    "Read(*)",
+    "Glob(*)",
+    "Grep(*)"
+  ]
+}
