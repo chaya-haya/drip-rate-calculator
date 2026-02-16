@@ -55,7 +55,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## タスク管理（トークン節約）
 
-作業が複数ステップにまたがる場合、`tasks.md` を使ってセッション間の引き継ぎを行う。
+プランが承認された作業では、**規模の大小に関わらず必ず** `tasks.md` を作成する。
 
 - 作業開始時に `tasks.md` があれば読んで続きから再開する
 - 区切りのよいところで状態を `tasks.md` に書き、ユーザーに `/clear` を促す
@@ -76,7 +76,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
    - **Phase一覧**: 作業をPhaseに分割し、各Phaseにサブタスクを `- [ ]` 形式で列挙する
    - **検証方法**: 完了をどう確認するか（テスト実行、ビルド確認など）
 4. **ExitPlanMode**: プランを提示し、ユーザーの承認を待つ
-5. **承認後・最初の操作**: プランファイルの内容を **`Write` ツールで `tasks.md` に書き出す**（これが最初のDiscord通知トリガーになる）
+5. **承認後・最初の操作**: プランファイルの内容を **`Write` ツールで `tasks.md` に書き出す**（規模に関わらず必須。これが最初のDiscord通知トリガーになる）
 6. **実装開始**: tasks.md を書いた後に初めてコード編集に入る
 7. **タスク単位で進捗記録**: サブタスク完了ごとに `tasks.md` のチェックを `[x]` に更新する（→ Discord通知が自動送信される）
 
