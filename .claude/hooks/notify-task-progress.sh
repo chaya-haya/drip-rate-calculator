@@ -1,5 +1,5 @@
 #!/bin/bash
-# Editフック: tasks.md のチェックが更新されたらDiscordに進捗通知
+# Edit/Writeフック: tasks.md が作成・更新されたらDiscordに進捗通知
 
 WEBHOOK_URL="${DISCORD_WEBHOOK_URL:-}"
 
@@ -26,7 +26,7 @@ REMAINING=${REMAINING:-0}
 DONE=$((TOTAL - REMAINING))
 
 if [ -n "$WEBHOOK_URL" ] && [ "$TOTAL" -gt 0 ]; then
-  PROJECT_NAME=$(basename "$(dirname "$(dirname "$TASKS_FILE")")" 2>/dev/null || basename "$(dirname "$TASKS_FILE")")
+  PROJECT_NAME=$(basename "$(dirname "$TASKS_FILE")")
 
   if [ "$REMAINING" -eq 0 ]; then
     CONTENT="**全タスク完了** 🎉\nプロジェクト: \`${PROJECT_NAME}\`\n${DONE}/${TOTAL} 件すべて完了！"
