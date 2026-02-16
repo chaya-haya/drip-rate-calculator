@@ -1,5 +1,5 @@
 #!/bin/bash
-# Stopフック: 残タスクがあれば続行、全完了ならDiscord通知して停止
+# Stopフック: 停止時にDiscordへ進捗通知を送る（停止自体はブロックしない）
 
 WEBHOOK_URL="${DISCORD_WEBHOOK_URL:-}"
 
@@ -11,31 +11,37 @@ TASKS_FILE="${PROJECT_DIR}/tasks.md"
 # --- tasks.md の未完了タスクを確認 ---
 if [ -f "$TASKS_FILE" ]; then
   REMAINING=$(grep -c '^\- \[ \]' "$TASKS_FILE" 2>/dev/null || echo "0")
+  TOTAL=$(grep -c '^\- \[' "$TASKS_FILE" 2>/dev/null || echo "0")
+  DONE=$((TOTAL - REMAINING))
 
   if [ "$REMAINING" -gt 0 ]; then
     # 未完了タスクあり → Discord に進捗通知
     if [ -n "$WEBHOOK_URL" ]; then
-      TOTAL=$(grep -c '^\- \[' "$TASKS_FILE" 2>/dev/null || echo "0")
-      DONE=$((TOTAL - REMAINING))
-      CONTENT="**タスク進捗** 📋 (${DONE}/${TOTAL} 完了)\n残り ${REMAINING} 件のタスクを続行します"
+      CONTENT="**タスク中断** ⏸️ (${DONE}/${TOTAL} 完了)\n残り ${REMAINING} 件の未完了タスクがあります"
       curl -s -X POST "$WEBHOOK_URL" \
         -H "Content-Type: application/json" \
         -d "{\"content\": \"${CONTENT}\"}" > /dev/null 2>&1
     fi
-
-    # 停止をブロック → Claude に次のタスクを続行させる
-    echo "tasks.md に未完了タスクが ${REMAINING} 件あります。次の未完了タスクを実行してください。" >&2
-    exit 2
+  else
+    # 全タスク完了 → Discord に完了通知
+    if [ -n "$WEBHOOK_URL" ]; then
+      PROJECT_NAME=$(basename "$PROJECT_DIR")
+      CONTENT="**全タスク完了** ✅\nプロジェクト: \`${PROJECT_NAME}\`\n時刻: $(date '+%Y-%m-%d %H:%M:%S')"
+      curl -s -X POST "$WEBHOOK_URL" \
+        -H "Content-Type: application/json" \
+        -d "{\"content\": \"${CONTENT}\"}" > /dev/null 2>&1
+    fi
+  fi
+else
+  # tasks.md なし → Discord に通知
+  if [ -n "$WEBHOOK_URL" ]; then
+    PROJECT_NAME=$(basename "$PROJECT_DIR")
+    CONTENT="**セッション終了** 🔚\nプロジェクト: \`${PROJECT_NAME}\`\n時刻: $(date '+%Y-%m-%d %H:%M:%S')"
+    curl -s -X POST "$WEBHOOK_URL" \
+      -H "Content-Type: application/json" \
+      -d "{\"content\": \"${CONTENT}\"}" > /dev/null 2>&1
   fi
 fi
 
-# --- 全タスク完了 or tasks.md なし → Discord通知して停止 ---
-if [ -n "$WEBHOOK_URL" ]; then
-  PROJECT_NAME=$(basename "$PROJECT_DIR")
-  CONTENT="**全タスク完了** ✅\nプロジェクト: \`${PROJECT_NAME}\`\n時刻: $(date '+%Y-%m-%d %H:%M:%S')"
-  curl -s -X POST "$WEBHOOK_URL" \
-    -H "Content-Type: application/json" \
-    -d "{\"content\": \"${CONTENT}\"}" > /dev/null 2>&1
-fi
-
+# 常に停止を許可する（ユーザーの中断を妨げない）
 exit 0
