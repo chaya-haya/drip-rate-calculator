@@ -264,33 +264,35 @@ export default function PatientDetailScreen() {
               isValid={isValid}
             />
 
-            {/* バリデーションエラー */}
-            {validationError && (
+            {/* バリデーションエラー（投与中は非表示） */}
+            {validationError && !isRunning && (
               <View style={styles.validationErrorContainer}>
                 <Text style={styles.validationErrorText}>{validationError}</Text>
               </View>
             )}
 
-            {/* 開始/停止ボタン */}
-            {isValid && (
+            {/* スタートボタン: isValid かつ 未実行のとき */}
+            {isValid && !isRunning && (
               <View style={styles.controlButtons}>
-                {!isRunning ? (
-                  <TouchableOpacity
-                    style={styles.startButton}
-                    onPress={handleStart}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.startButtonText}>スタート</Text>
-                  </TouchableOpacity>
-                ) : (
-                  <TouchableOpacity
-                    style={styles.stopButton}
-                    onPress={handleStop}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.stopButtonText}>ストップ</Text>
-                  </TouchableOpacity>
-                )}
+                <TouchableOpacity
+                  style={styles.startButton}
+                  onPress={handleStart}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.startButtonText}>スタート</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+            {/* ストップボタン: isRunning のとき常に表示（isValid に依存させない） */}
+            {isRunning && (
+              <View style={styles.controlButtons}>
+                <TouchableOpacity
+                  style={styles.stopButton}
+                  onPress={handleStop}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.stopButtonText}>ストップ</Text>
+                </TouchableOpacity>
               </View>
             )}
           </View>
