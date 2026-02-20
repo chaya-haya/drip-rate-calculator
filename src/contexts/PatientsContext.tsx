@@ -6,20 +6,14 @@ import React, {
   useCallback,
   ReactNode,
 } from "react";
+import { AppState, AppStateStatus } from "react-native";
 import * as Crypto from "expo-crypto";
 import { savePatients, loadPatients } from "../lib/storage";
 import { INFUSION_SETS } from "../constants/infusionSets";
-import {
-  calculatePatientStatus,
-  calculateRemainingTime,
-} from "../features/patients/logic";
-import type {
-  Patient,
-  PatientWithStatus,
-  PatientCreateData,
-  PatientUpdateData,
-} from "../types";
+import { calculatePatientStatus, calculateRemainingTime } from "../features/patients/logic";
+import type { Patient, PatientWithStatus, PatientCreateData, PatientUpdateData } from "../types";
 import type { PatientsContextValue } from "../types/context";
+import { useWatchSync } from "../hooks/useWatchSync";
 
 const PatientsContext = createContext<PatientsContextValue | null>(null);
 
@@ -35,11 +29,29 @@ interface PatientsProviderProps {
   children: ReactNode;
 }
 
-export const PatientsProvider: React.FC<PatientsProviderProps> = ({
-  children,
-}) => {
+export const PatientsProvider: React.FC<PatientsProviderProps> = ({ children }) => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  // ステータス再計算トリガー（値が変わるとpatientsWithStatusが再計算される）
+  const [, setStatusTick] = useState(0);
+
+  // フォアグラウンド復帰時にステータスを再計算
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextAppState: AppStateStatus) => {
+      if (nextAppState === "active") {
+        setStatusTick((t) => t + 1);
+      }
+    });
+    return () => subscription.remove();
+  }, []);
+
+  // 30秒ごとにステータスを再計算（投与中タイマーの期限切れに対応）
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setStatusTick((t) => t + 1);
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   // 初期読み込み
   useEffect(() => {
@@ -152,6 +164,9 @@ export const PatientsProvider: React.FC<PatientsProviderProps> = ({
     remainingTime: calculateRemainingTime(patient),
   }));
 
+  // Apple Watchへのデータ同期
+  useWatchSync({ patients: patientsWithStatus, startPatient, stopPatient });
+
   const value: PatientsContextValue = {
     patients: patientsWithStatus,
     isLoading,
@@ -163,9 +178,5 @@ export const PatientsProvider: React.FC<PatientsProviderProps> = ({
     stopPatient,
   };
 
-  return (
-    <PatientsContext.Provider value={value}>
-      {children}
-    </PatientsContext.Provider>
-  );
+  return <PatientsContext.Provider value={value}>{children}</PatientsContext.Provider>;
 };

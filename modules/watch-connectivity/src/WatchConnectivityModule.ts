@@ -1,5 +1,5 @@
-import { requireOptionalNativeModule, type EventSubscription } from 'expo-modules-core';
-import type { WatchMessage } from './WatchConnectivityModule.types';
+import { requireOptionalNativeModule, type EventSubscription } from "expo-modules-core";
+import type { WatchMessage } from "./WatchConnectivityModule.types";
 
 // モジュールが発行するイベント
 type WatchConnectivityEvents = {
@@ -27,7 +27,7 @@ interface WatchConnectivityNativeModule {
 
 // Expo Goではネイティブモジュールが利用不可のためoptionalで読み込む
 const nativeModule =
-  requireOptionalNativeModule<WatchConnectivityNativeModule>('WatchConnectivity');
+  requireOptionalNativeModule<WatchConnectivityNativeModule>("WatchConnectivity");
 
 // コールバック参照でリスナーを管理
 const listeners = new Map<(message: WatchMessage) => void, EventSubscription>();
@@ -60,7 +60,9 @@ export async function isWatchAppInstalled(): Promise<boolean> {
 }
 
 // Watchにメッセージを送信（Watchが到達可能であることが必要）
-export async function sendMessage(message: Record<string, unknown>): Promise<Record<string, unknown>> {
+export async function sendMessage(
+  message: Record<string, unknown>
+): Promise<Record<string, unknown>> {
   if (!nativeModule) return {};
   return nativeModule.sendMessage(message);
 }
@@ -80,7 +82,7 @@ export async function transferUserInfo(userInfo: Record<string, unknown>): Promi
 // Watchからのメッセージリスナーを追加
 export function addMessageListener(callback: (message: WatchMessage) => void): void {
   if (!nativeModule) return;
-  const subscription = nativeModule.addListener('onWatchMessage', callback);
+  const subscription = nativeModule.addListener("onWatchMessage", callback);
   listeners.set(callback, subscription);
 }
 

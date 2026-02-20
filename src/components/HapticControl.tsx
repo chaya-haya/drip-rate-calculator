@@ -1,8 +1,8 @@
-import React from 'react';
-import { View, Text, Switch, TouchableOpacity, StyleSheet } from 'react-native';
-import { colors, spacing, fontSize } from '../constants/theme';
-import { HAPTIC_INTENSITY } from '../features/calculation/hooks/useDripAnimation';
-import type { HapticIntensity } from '../types';
+import React from "react";
+import { View, Text, Switch, TouchableOpacity, StyleSheet } from "react-native";
+import { colors, spacing, fontSize } from "../constants/theme";
+import { HAPTIC_INTENSITY } from "../features/calculation/hooks/useDripAnimation";
+import type { HapticIntensity } from "../types";
 
 interface IntensityOption {
   id: HapticIntensity;
@@ -11,9 +11,9 @@ interface IntensityOption {
 
 // ハプティック強度オプション
 const INTENSITY_OPTIONS: IntensityOption[] = [
-  { id: HAPTIC_INTENSITY.LIGHT, label: '弱' },
-  { id: HAPTIC_INTENSITY.MEDIUM, label: '中' },
-  { id: HAPTIC_INTENSITY.HEAVY, label: '強' },
+  { id: HAPTIC_INTENSITY.LIGHT, label: "弱" },
+  { id: HAPTIC_INTENSITY.MEDIUM, label: "中" },
+  { id: HAPTIC_INTENSITY.HEAVY, label: "強" },
 ];
 
 interface HapticControlProps {
@@ -91,9 +91,9 @@ const styles = StyleSheet.create({
     borderTopColor: colors.border,
   },
   row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   labelContainer: {
     flex: 1,
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: fontSize.medium,
     color: colors.text,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   description: {
     fontSize: fontSize.small,
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   intensityOptions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: spacing.sm,
   },
   intensityButton: {
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: colors.border,
-    alignItems: 'center',
+    alignItems: "center",
   },
   intensityButtonSelected: {
     backgroundColor: colors.primary,
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
   intensityButtonText: {
     fontSize: fontSize.medium,
     color: colors.text,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   intensityButtonTextSelected: {
     color: colors.textLight,
@@ -146,6 +146,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     fontSize: fontSize.small,
     color: colors.secondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

@@ -23,9 +23,7 @@ beforeEach(() => {
   (Notifications.requestPermissionsAsync as jest.Mock).mockResolvedValue({
     status: "granted",
   });
-  (Notifications.scheduleNotificationAsync as jest.Mock).mockResolvedValue(
-    "notif-123"
-  );
+  (Notifications.scheduleNotificationAsync as jest.Mock).mockResolvedValue("notif-123");
 });
 
 describe("useNotification", () => {
@@ -206,9 +204,7 @@ describe("useNotification", () => {
         await result.current.cancelNotification();
       });
 
-      expect(
-        Notifications.cancelScheduledNotificationAsync
-      ).toHaveBeenCalledWith("notif-123");
+      expect(Notifications.cancelScheduledNotificationAsync).toHaveBeenCalledWith("notif-123");
       expect(result.current.scheduledNotificationId).toBeNull();
 
       jest.useRealTimers();
@@ -222,9 +218,7 @@ describe("useNotification", () => {
         await result.current.cancelNotification();
       });
 
-      expect(
-        Notifications.cancelScheduledNotificationAsync
-      ).not.toHaveBeenCalled();
+      expect(Notifications.cancelScheduledNotificationAsync).not.toHaveBeenCalled();
     });
   });
 

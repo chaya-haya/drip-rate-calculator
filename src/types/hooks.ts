@@ -44,9 +44,6 @@ export interface UseNotificationReturn {
   hasPermission: boolean;
   scheduledNotificationId: string | null;
   toggleNotification: (enabled: boolean, endTime?: Date) => Promise<void>;
-  updateTiming: (
-    timing: NotificationTimingOption,
-    endTime?: Date
-  ) => Promise<void>;
+  updateTiming: (timing: NotificationTimingOption, endTime?: Date) => Promise<void>;
   cancelNotification: () => Promise<void>;
 }

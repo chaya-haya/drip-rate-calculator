@@ -85,23 +85,16 @@ describe("schedulePatientNotification", () => {
   });
 
   test("未来の時刻に通知をスケジュールする", async () => {
-    (
-      Notifications.scheduleNotificationAsync as jest.Mock
-    ).mockResolvedValueOnce("notif-123");
+    (Notifications.scheduleNotificationAsync as jest.Mock).mockResolvedValueOnce("notif-123");
 
     const endTime = new Date("2024-01-15T12:00:00");
-    const result = await schedulePatientNotification(
-      "patient-1",
-      "田中太郎",
-      endTime,
-      5
-    );
+    const result = await schedulePatientNotification("patient-1", endTime, 5);
 
     expect(result).toBe("notif-123");
     expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledWith({
       content: {
         title: "点滴終了のお知らせ",
-        body: "田中太郎 の点滴終了まであと5分です",
+        body: "点滴終了まであと5分です",
         sound: true,
         data: { patientId: "patient-1" },
       },
@@ -112,36 +105,25 @@ describe("schedulePatientNotification", () => {
     });
 
     // 検証: endTime - 5分 - now = 115分 = 6900秒
-    const call = (Notifications.scheduleNotificationAsync as jest.Mock).mock
-      .calls[0][0];
+    const call = (Notifications.scheduleNotificationAsync as jest.Mock).mock.calls[0][0];
     expect(call.trigger.seconds).toBe(6900);
   });
 
   test("通知時刻が過去の場合nullを返す", async () => {
     const endTime = new Date("2024-01-15T10:03:00"); // 3分後、タイミングは5分前
-    const result = await schedulePatientNotification(
-      "patient-1",
-      "田中太郎",
-      endTime,
-      5
-    );
+    const result = await schedulePatientNotification("patient-1", endTime, 5);
 
     expect(result).toBeNull();
     expect(Notifications.scheduleNotificationAsync).not.toHaveBeenCalled();
   });
 
   test("スケジュールエラー時nullを返す", async () => {
-    (
-      Notifications.scheduleNotificationAsync as jest.Mock
-    ).mockRejectedValueOnce(new Error("Schedule failed"));
+    (Notifications.scheduleNotificationAsync as jest.Mock).mockRejectedValueOnce(
+      new Error("Schedule failed")
+    );
 
     const endTime = new Date("2024-01-15T12:00:00");
-    const result = await schedulePatientNotification(
-      "patient-1",
-      "田中太郎",
-      endTime,
-      5
-    );
+    const result = await schedulePatientNotification("patient-1", endTime, 5);
 
     expect(result).toBeNull();
   });
@@ -151,23 +133,19 @@ describe("cancelNotification", () => {
   test("IDで通知をキャンセルする", async () => {
     await cancelNotification("notif-123");
 
-    expect(
-      Notifications.cancelScheduledNotificationAsync
-    ).toHaveBeenCalledWith("notif-123");
+    expect(Notifications.cancelScheduledNotificationAsync).toHaveBeenCalledWith("notif-123");
   });
 
   test("IDがnullの場合何もしない", async () => {
     await cancelNotification(null);
 
-    expect(
-      Notifications.cancelScheduledNotificationAsync
-    ).not.toHaveBeenCalled();
+    expect(Notifications.cancelScheduledNotificationAsync).not.toHaveBeenCalled();
   });
 
   test("キャンセルエラーを安全に処理する", async () => {
-    (
-      Notifications.cancelScheduledNotificationAsync as jest.Mock
-    ).mockRejectedValueOnce(new Error("Cancel failed"));
+    (Notifications.cancelScheduledNotificationAsync as jest.Mock).mockRejectedValueOnce(
+      new Error("Cancel failed")
+    );
 
     await expect(cancelNotification("notif-123")).resolves.toBeUndefined();
   });
@@ -177,15 +155,13 @@ describe("cancelAllNotifications", () => {
   test("全スケジュール通知をキャンセルする", async () => {
     await cancelAllNotifications();
 
-    expect(
-      Notifications.cancelAllScheduledNotificationsAsync
-    ).toHaveBeenCalled();
+    expect(Notifications.cancelAllScheduledNotificationsAsync).toHaveBeenCalled();
   });
 
   test("エラーを安全に処理する", async () => {
-    (
-      Notifications.cancelAllScheduledNotificationsAsync as jest.Mock
-    ).mockRejectedValueOnce(new Error("Cancel failed"));
+    (Notifications.cancelAllScheduledNotificationsAsync as jest.Mock).mockRejectedValueOnce(
+      new Error("Cancel failed")
+    );
 
     await expect(cancelAllNotifications()).resolves.toBeUndefined();
   });
@@ -196,9 +172,9 @@ describe("getScheduledNotifications", () => {
     const mockNotifications = [
       { identifier: "notif-1", content: { title: "Test" }, trigger: null },
     ];
-    (
-      Notifications.getAllScheduledNotificationsAsync as jest.Mock
-    ).mockResolvedValueOnce(mockNotifications);
+    (Notifications.getAllScheduledNotificationsAsync as jest.Mock).mockResolvedValueOnce(
+      mockNotifications
+    );
 
     const result = await getScheduledNotifications();
 
@@ -206,9 +182,9 @@ describe("getScheduledNotifications", () => {
   });
 
   test("エラー時は空配列を返す", async () => {
-    (
-      Notifications.getAllScheduledNotificationsAsync as jest.Mock
-    ).mockRejectedValueOnce(new Error("Fetch failed"));
+    (Notifications.getAllScheduledNotificationsAsync as jest.Mock).mockRejectedValueOnce(
+      new Error("Fetch failed")
+    );
 
     const result = await getScheduledNotifications();
 

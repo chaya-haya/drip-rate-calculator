@@ -1,4 +1,5 @@
 import React from "react";
+import { AppState } from "react-native";
 import { renderHook, act, waitFor } from "@testing-library/react-native";
 import { PatientsProvider, usePatients } from "./PatientsContext";
 import { savePatients, loadPatients } from "../lib/storage";
@@ -20,6 +21,10 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 beforeEach(() => {
   jest.clearAllMocks();
   (loadPatients as jest.Mock).mockResolvedValue({ success: true, data: [] });
+  // AppState.addEventListenerのデフォルトモック（removeを持つオブジェクトを返す）
+  jest.spyOn(AppState, "addEventListener").mockReturnValue({
+    remove: jest.fn(),
+  } as any);
 });
 
 describe("PatientsContext", () => {
@@ -283,15 +288,11 @@ describe("PatientsContext", () => {
         expect(result.current.patients).toHaveLength(1);
       });
 
-      expect(result.current.patients[0].status).toEqual(
-        PATIENT_STATUS.COMPLETED
-      );
+      expect(result.current.patients[0].status).toEqual(PATIENT_STATUS.COMPLETED);
     });
 
     test("残り5分以上の実行中患者はRUNNINGステータス", async () => {
-      const futureEndTime = new Date(
-        Date.now() + 30 * 60 * 1000
-      ).toISOString();
+      const futureEndTime = new Date(Date.now() + 30 * 60 * 1000).toISOString();
       (loadPatients as jest.Mock).mockResolvedValue({
         success: true,
         data: [
@@ -357,9 +358,137 @@ describe("PatientsContext", () => {
         expect(result.current.patients).toHaveLength(1);
       });
 
-      expect(result.current.patients[0].status).toEqual(
-        PATIENT_STATUS.ENDING_SOON
-      );
+      expect(result.current.patients[0].status).toEqual(PATIENT_STATUS.ENDING_SOON);
+    });
+  });
+
+  describe("AppState復帰時のステータス再計算", () => {
+    test("フォアグラウンド復帰で終了済み患者のステータスがCOMPLETEDに更新される", async () => {
+      // AppStateのaddEventListenerをスパイしてコールバックをキャプチャ
+      let appStateCallback: ((state: string) => void) | null = null;
+      const removeSpy = jest.fn();
+      const addEventListenerSpy = jest
+        .spyOn(AppState, "addEventListener")
+        .mockImplementation((event: string, callback: any) => {
+          if (event === "change") {
+            appStateCallback = callback;
+          }
+          return { remove: removeSpy } as any;
+        });
+
+      // 最初は未来のendTimeで投与中
+      const realNow = Date.now();
+      const futureEndTime = new Date(realNow + 30 * 60 * 1000).toISOString();
+      (loadPatients as jest.Mock).mockResolvedValue({
+        success: true,
+        data: [
+          {
+            id: "p1",
+            roomNumber: "101",
+            bedNumber: "A",
+            infusionSet: INFUSION_SETS.ADULT,
+            volume: "500",
+            hours: "0",
+            minutes: "30",
+            isRunning: true,
+            startedAt: new Date(realNow).toISOString(),
+            endTime: futureEndTime,
+            notificationEnabled: false,
+            notificationTiming: { id: "5", label: "5分前", minutes: 5 },
+            hapticEnabled: false,
+            hapticIntensity: "medium",
+            createdAt: "2024-01-15T10:00:00.000Z",
+            updatedAt: "2024-01-15T10:00:00.000Z",
+          },
+        ],
+      });
+
+      const { result } = renderHook(() => usePatients(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.patients).toHaveLength(1);
+      });
+
+      // 初期状態はRUNNING
+      expect(result.current.patients[0].status).toEqual(PATIENT_STATUS.RUNNING);
+      expect(appStateCallback).not.toBeNull();
+
+      // Date コンストラクタをモックして未来の時刻を返す
+      const futureTime = new Date(futureEndTime).getTime() + 60000;
+      const OriginalDate = global.Date;
+      const mockDate = class extends OriginalDate {
+        constructor(...args: any[]) {
+          if (args.length === 0) {
+            super(futureTime);
+          } else {
+            // @ts-ignore
+            super(...args);
+          }
+        }
+
+        static now() {
+          return futureTime;
+        }
+      } as any;
+      global.Date = mockDate;
+
+      // AppState 'active' イベントを発火
+      await act(async () => {
+        appStateCallback!("active");
+      });
+
+      // ステータスがCOMPLETEDに更新される
+      expect(result.current.patients[0].status).toEqual(PATIENT_STATUS.COMPLETED);
+
+      // モックをリストア
+      global.Date = OriginalDate;
+      addEventListenerSpy.mockRestore();
+    });
+
+    test("30秒タイマーでステータスが再計算される", async () => {
+      jest.useFakeTimers();
+
+      const futureEndTime = new Date(Date.now() + 10 * 1000).toISOString(); // 10秒後
+
+      (loadPatients as jest.Mock).mockResolvedValue({
+        success: true,
+        data: [
+          {
+            id: "p1",
+            roomNumber: "101",
+            bedNumber: "A",
+            infusionSet: INFUSION_SETS.ADULT,
+            volume: "500",
+            hours: "0",
+            minutes: "1",
+            isRunning: true,
+            startedAt: new Date().toISOString(),
+            endTime: futureEndTime,
+            notificationEnabled: false,
+            notificationTiming: { id: "5", label: "5分前", minutes: 5 },
+            hapticEnabled: false,
+            hapticIntensity: "medium",
+            createdAt: "2024-01-15T10:00:00.000Z",
+            updatedAt: "2024-01-15T10:00:00.000Z",
+          },
+        ],
+      });
+
+      const { result } = renderHook(() => usePatients(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.patients).toHaveLength(1);
+      });
+
+      // 30秒タイマーを進める（endTimeを超える時刻に）
+      await act(async () => {
+        jest.advanceTimersByTime(30000);
+      });
+
+      // endTimeが過去になったのでCOMPLETEDになる
+      expect(result.current.patients[0].status).toEqual(PATIENT_STATUS.COMPLETED);
+
+      jest.useRealTimers();
     });
   });
 

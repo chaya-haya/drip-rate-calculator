@@ -6,11 +6,7 @@ import {
   calculateTotalDrops,
   calculateEndTime,
 } from "../logic";
-import {
-  INFUSION_SETS,
-  INPUT_LIMITS,
-  ANIMATION_CONFIG,
-} from "../../../constants/infusionSets";
+import { INFUSION_SETS, INPUT_LIMITS, ANIMATION_CONFIG } from "../../../constants/infusionSets";
 import type { InfusionSet } from "../../../types";
 
 export interface UseCalculationReturn {
@@ -40,9 +36,7 @@ export const useCalculation = (): UseCalculationReturn => {
   const [volume, setVolume] = useState<string>("");
   const [hours, setHours] = useState<string>("");
   const [minutes, setMinutes] = useState<string>("");
-  const [infusionSet, setInfusionSet] = useState<InfusionSet>(
-    INFUSION_SETS.ADULT
-  );
+  const [infusionSet, setInfusionSet] = useState<InfusionSet>(INFUSION_SETS.ADULT);
 
   // 入力値を数値に変換
   const volumeNum = parseFloat(volume) || 0;
@@ -56,11 +50,7 @@ export const useCalculation = (): UseCalculationReturn => {
 
   // 滴下数/分
   const dropsPerMinute = useMemo(() => {
-    return calculateDropsPerMinute(
-      volumeNum,
-      totalMinutes,
-      infusionSet.dropsPerMl
-    );
+    return calculateDropsPerMinute(volumeNum, totalMinutes, infusionSet.dropsPerMl);
   }, [volumeNum, totalMinutes, infusionSet.dropsPerMl]);
 
   // 滴下間隔（ミリ秒）

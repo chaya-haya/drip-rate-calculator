@@ -20,10 +20,7 @@ export interface UseNotificationReturn {
   hasPermission: boolean;
   scheduledNotificationId: string | null;
   toggleNotification: (enabled: boolean, endTime?: Date) => Promise<void>;
-  updateTiming: (
-    timing: NotificationTimingOption,
-    endTime?: Date
-  ) => Promise<void>;
+  updateTiming: (timing: NotificationTimingOption, endTime?: Date) => Promise<void>;
   cancelNotification: () => Promise<void>;
   cancelAllNotifications: () => Promise<void>;
   requestPermission: () => Promise<boolean>;
@@ -34,18 +31,16 @@ export interface UseNotificationReturn {
  */
 export const useNotification = (): UseNotificationReturn => {
   const [isEnabled, setIsEnabled] = useState(false);
-  const [selectedTiming, setSelectedTiming] =
-    useState<NotificationTimingOption>(NOTIFICATION_TIMING_OPTIONS[0]);
-  const [scheduledNotificationId, setScheduledNotificationId] = useState<
-    string | null
-  >(null);
+  const [selectedTiming, setSelectedTiming] = useState<NotificationTimingOption>(
+    NOTIFICATION_TIMING_OPTIONS[0]
+  );
+  const [scheduledNotificationId, setScheduledNotificationId] = useState<string | null>(null);
   const [hasPermission, setHasPermission] = useState(false);
 
   // 通知権限のリクエスト
   const requestPermission = useCallback(async (): Promise<boolean> => {
     try {
-      const { status: existingStatus } =
-        await Notifications.getPermissionsAsync();
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
       let finalStatus = existingStatus;
 
       if (existingStatus !== "granted") {
@@ -72,9 +67,7 @@ export const useNotification = (): UseNotificationReturn => {
       try {
         // 既存の通知をキャンセル
         if (scheduledNotificationId) {
-          await Notifications.cancelScheduledNotificationAsync(
-            scheduledNotificationId
-          );
+          await Notifications.cancelScheduledNotificationAsync(scheduledNotificationId);
         }
 
         if (!hasPermission) {
@@ -85,9 +78,7 @@ export const useNotification = (): UseNotificationReturn => {
         }
 
         // 通知時刻の計算（終了時刻のX分前）
-        const notificationTime = new Date(
-          endTime.getTime() - timingMinutes * 60 * 1000
-        );
+        const notificationTime = new Date(endTime.getTime() - timingMinutes * 60 * 1000);
         const now = new Date();
 
         // 通知時刻が過去なら通知しない
@@ -125,9 +116,7 @@ export const useNotification = (): UseNotificationReturn => {
   const cancelNotification = useCallback(async (): Promise<void> => {
     try {
       if (scheduledNotificationId) {
-        await Notifications.cancelScheduledNotificationAsync(
-          scheduledNotificationId
-        );
+        await Notifications.cancelScheduledNotificationAsync(scheduledNotificationId);
         setScheduledNotificationId(null);
       }
     } catch {
@@ -161,10 +150,7 @@ export const useNotification = (): UseNotificationReturn => {
 
   // タイミング更新（有効中はリスケジュール）
   const updateTiming = useCallback(
-    async (
-      timing: NotificationTimingOption,
-      endTime?: Date
-    ): Promise<void> => {
+    async (timing: NotificationTimingOption, endTime?: Date): Promise<void> => {
       setSelectedTiming(timing);
 
       if (isEnabled && endTime) {

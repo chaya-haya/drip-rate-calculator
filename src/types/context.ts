@@ -1,9 +1,4 @@
-import type {
-  Patient,
-  PatientWithStatus,
-  PatientCreateData,
-  PatientUpdateData,
-} from "./patient";
+import type { Patient, PatientWithStatus, PatientCreateData, PatientUpdateData } from "./patient";
 import type { Preset, PresetCreateData, PresetUpdateData } from "./preset";
 
 // PatientsContext の値型
@@ -33,7 +28,6 @@ export interface NotificationContextValue {
   hasPermission: boolean;
   scheduleForPatient: (
     patientId: string,
-    patientName: string,
     endTime: Date,
     timingMinutes: number
   ) => Promise<string | null>;

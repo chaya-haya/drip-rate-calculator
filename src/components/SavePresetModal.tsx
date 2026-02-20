@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -8,9 +8,9 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-} from 'react-native';
-import { colors, spacing, fontSize } from '../constants/theme';
-import type { InfusionSet, PresetCreateData } from '../types';
+} from "react-native";
+import { colors, spacing, fontSize } from "../constants/theme";
+import type { InfusionSet, PresetCreateData } from "../types";
 
 interface CurrentSettings {
   infusionSet: InfusionSet;
@@ -33,7 +33,7 @@ export const SavePresetModal: React.FC<SavePresetModalProps> = ({
   onSave,
   currentSettings,
 }) => {
-  const [name, setName] = useState('');
+  const [name, setName] = useState("");
 
   const handleSave = () => {
     if (name.trim()) {
@@ -41,23 +41,23 @@ export const SavePresetModal: React.FC<SavePresetModalProps> = ({
         name: name.trim(),
         ...currentSettings,
       });
-      setName('');
+      setName("");
       onClose();
     }
   };
 
   const handleClose = () => {
-    setName('');
+    setName("");
     onClose();
   };
 
-  const infusionSetName = currentSettings?.infusionSet?.name || '成人用';
+  const infusionSetName = currentSettings?.infusionSet?.name || "成人用";
   const timeText = `${currentSettings?.hours || 0}時間${currentSettings?.minutes || 0}分`;
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.overlay}
       >
         <View style={styles.container}>
@@ -87,11 +87,7 @@ export const SavePresetModal: React.FC<SavePresetModalProps> = ({
           </View>
 
           <View style={styles.actions}>
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={handleClose}
-              activeOpacity={0.7}
-            >
+            <TouchableOpacity style={styles.cancelButton} onPress={handleClose} activeOpacity={0.7}>
               <Text style={styles.cancelButtonText}>キャンセル</Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -112,8 +108,8 @@ export const SavePresetModal: React.FC<SavePresetModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
     padding: spacing.lg,
   },
   container: {
@@ -122,14 +118,14 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: spacing.lg,
   },
   title: {
     fontSize: fontSize.large,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.text,
   },
   closeButton: {
@@ -169,7 +165,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   actions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: spacing.md,
   },
   cancelButton: {
@@ -179,7 +175,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: 8,
     padding: spacing.md,
-    alignItems: 'center',
+    alignItems: "center",
   },
   cancelButtonText: {
     color: colors.textSecondary,
@@ -190,7 +186,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     borderRadius: 8,
     padding: spacing.md,
-    alignItems: 'center',
+    alignItems: "center",
   },
   saveButtonDisabled: {
     backgroundColor: colors.border,
@@ -198,6 +194,6 @@ const styles = StyleSheet.create({
   saveButtonText: {
     color: colors.textLight,
     fontSize: fontSize.medium,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

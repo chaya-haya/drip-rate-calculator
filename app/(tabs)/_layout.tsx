@@ -1,6 +1,6 @@
-import { Tabs } from 'expo-router';
-import { View, Text, StyleSheet } from 'react-native';
-import { colors, fontSize } from '../../src/constants/theme';
+import { Tabs } from "expo-router";
+import { View, Text, StyleSheet } from "react-native";
+import { colors, fontSize } from "../../src/constants/theme";
 
 interface TabIconProps {
   label: string;
@@ -11,7 +11,7 @@ interface TabIconProps {
 const TabIcon: React.FC<TabIconProps> = ({ label, focused }) => (
   <View style={styles.iconContainer}>
     <Text style={[styles.icon, focused && styles.iconFocused]}>
-      {label === '患者一覧' ? '👥' : '⭐'}
+      {label === "患者一覧" ? "👥" : "⭐"}
     </Text>
   </View>
 );
@@ -31,14 +31,14 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          tabBarLabel: '患者一覧',
+          tabBarLabel: "患者一覧",
           tabBarIcon: ({ focused }) => <TabIcon label="患者一覧" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="presets"
         options={{
-          tabBarLabel: 'プリセット',
+          tabBarLabel: "プリセット",
           tabBarIcon: ({ focused }) => <TabIcon label="プリセット" focused={focused} />,
         }}
       />
@@ -54,11 +54,11 @@ const styles = StyleSheet.create({
   },
   tabBarLabel: {
     fontSize: fontSize.small,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   iconContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   icon: {
     fontSize: 20,

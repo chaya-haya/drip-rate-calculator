@@ -1,8 +1,8 @@
-import React from 'react';
-import { View, Text, Switch, TouchableOpacity, StyleSheet } from 'react-native';
-import { NOTIFICATION_TIMING_OPTIONS } from '../constants/infusionSets';
-import { colors, spacing, fontSize } from '../constants/theme';
-import type { NotificationTimingOption } from '../types';
+import React from "react";
+import { View, Text, Switch, TouchableOpacity, StyleSheet } from "react-native";
+import { NOTIFICATION_TIMING_OPTIONS } from "../constants/infusionSets";
+import { colors, spacing, fontSize } from "../constants/theme";
+import type { NotificationTimingOption } from "../types";
 
 interface NotificationControlProps {
   isEnabled: boolean;
@@ -42,9 +42,7 @@ export const NotificationControl: React.FC<NotificationControlProps> = ({
       <View style={styles.toggleRow}>
         <View style={styles.toggleLabel}>
           <Text style={styles.label}>終了通知</Text>
-          {!hasPermission && (
-            <Text style={styles.permissionWarning}>(通知権限が必要です)</Text>
-          )}
+          {!hasPermission && <Text style={styles.permissionWarning}>(通知権限が必要です)</Text>}
         </View>
         <Switch
           value={isEnabled}
@@ -69,10 +67,7 @@ export const NotificationControl: React.FC<NotificationControlProps> = ({
                   activeOpacity={0.7}
                 >
                   <Text
-                    style={[
-                      styles.timingButtonText,
-                      isSelected && styles.timingButtonTextSelected,
-                    ]}
+                    style={[styles.timingButtonText, isSelected && styles.timingButtonTextSelected]}
                   >
                     {option.label}
                   </Text>
@@ -96,20 +91,20 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   toggleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: spacing.sm,
   },
   toggleLabel: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.sm,
   },
   label: {
     fontSize: fontSize.medium,
     color: colors.text,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   permissionWarning: {
     fontSize: fontSize.small,
@@ -127,7 +122,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   timingOptions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: spacing.sm,
   },
   timingButton: {
@@ -137,7 +132,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: colors.border,
-    alignItems: 'center',
+    alignItems: "center",
   },
   timingButtonSelected: {
     backgroundColor: colors.primary,
@@ -149,12 +144,12 @@ const styles = StyleSheet.create({
   },
   timingButtonTextSelected: {
     color: colors.textLight,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   notificationInfo: {
     marginTop: spacing.md,
     fontSize: fontSize.small,
     color: colors.secondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

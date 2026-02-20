@@ -36,11 +36,7 @@ export interface InputLimits {
 }
 
 // 患者ステータス
-export type PatientStatusId =
-  | "waiting"
-  | "running"
-  | "ending_soon"
-  | "completed";
+export type PatientStatusId = "waiting" | "running" | "ending_soon" | "completed";
 
 export interface PatientStatusConfig {
   id: PatientStatusId;

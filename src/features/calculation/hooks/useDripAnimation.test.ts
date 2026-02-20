@@ -1,9 +1,7 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 import { renderHook, act } from "@testing-library/react-native";
 import { Animated } from "react-native";
-import {
-  useDripAnimation,
-  HAPTIC_INTENSITY,
-} from "./useDripAnimation";
+import { useDripAnimation, HAPTIC_INTENSITY } from "./useDripAnimation";
 
 // expo-hapticsのモック
 jest.mock("expo-haptics", () => ({
@@ -107,9 +105,7 @@ describe("useDripAnimation", () => {
     });
 
     test("有効時にアニメーション開始でハプティックが発火する", async () => {
-      renderHook(() =>
-        useDripAnimation(1000, true, true, HAPTIC_INTENSITY.MEDIUM)
-      );
+      renderHook(() => useDripAnimation(1000, true, true, HAPTIC_INTENSITY.MEDIUM));
 
       await act(async () => {
         jest.advanceTimersByTime(50);
@@ -119,9 +115,7 @@ describe("useDripAnimation", () => {
     });
 
     test("無効時にはハプティックが発火しない", async () => {
-      renderHook(() =>
-        useDripAnimation(1000, true, false, HAPTIC_INTENSITY.MEDIUM)
-      );
+      renderHook(() => useDripAnimation(1000, true, false, HAPTIC_INTENSITY.MEDIUM));
 
       await act(async () => {
         jest.advanceTimersByTime(50);
@@ -131,9 +125,7 @@ describe("useDripAnimation", () => {
     });
 
     test("lightスタイルが正しく適用される", async () => {
-      renderHook(() =>
-        useDripAnimation(1000, true, true, HAPTIC_INTENSITY.LIGHT)
-      );
+      renderHook(() => useDripAnimation(1000, true, true, HAPTIC_INTENSITY.LIGHT));
 
       await act(async () => {
         jest.advanceTimersByTime(50);
@@ -143,9 +135,7 @@ describe("useDripAnimation", () => {
     });
 
     test("heavyスタイルが正しく適用される", async () => {
-      renderHook(() =>
-        useDripAnimation(1000, true, true, HAPTIC_INTENSITY.HEAVY)
-      );
+      renderHook(() => useDripAnimation(1000, true, true, HAPTIC_INTENSITY.HEAVY));
 
       await act(async () => {
         jest.advanceTimersByTime(50);

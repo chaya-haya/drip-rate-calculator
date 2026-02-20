@@ -2,24 +2,17 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { STORAGE_KEYS } from "../constants/storageKeys";
 import type { Patient } from "../types/patient";
 import type { Preset } from "../types/preset";
-import type {
-  NotificationMap,
-  SerializedNotificationMap,
-} from "../types/notification";
+import type { NotificationMap, SerializedNotificationMap } from "../types/notification";
 import type { StorageResult, StorageSaveResult } from "../types/storage";
+import { logger } from "./logger";
 
 // 患者データを保存
-export const savePatients = async (
-  patients: Patient[]
-): Promise<StorageSaveResult> => {
+export const savePatients = async (patients: Patient[]): Promise<StorageSaveResult> => {
   try {
-    await AsyncStorage.setItem(
-      STORAGE_KEYS.PATIENTS,
-      JSON.stringify(patients)
-    );
+    await AsyncStorage.setItem(STORAGE_KEYS.PATIENTS, JSON.stringify(patients));
     return { success: true };
   } catch (error) {
-    console.error("患者データの保存に失敗:", error);
+    logger.error("患者データの保存に失敗:", error);
     return { success: false, error: error as Error };
   }
 };
@@ -30,20 +23,18 @@ export const loadPatients = async (): Promise<StorageResult<Patient[]>> => {
     const data = await AsyncStorage.getItem(STORAGE_KEYS.PATIENTS);
     return { success: true, data: data ? (JSON.parse(data) as Patient[]) : [] };
   } catch (error) {
-    console.error("患者データの読み込みに失敗:", error);
+    logger.error("患者データの読み込みに失敗:", error);
     return { success: false, error: error as Error, data: [] };
   }
 };
 
 // プリセットを保存
-export const savePresets = async (
-  presets: Preset[]
-): Promise<StorageSaveResult> => {
+export const savePresets = async (presets: Preset[]): Promise<StorageSaveResult> => {
   try {
     await AsyncStorage.setItem(STORAGE_KEYS.PRESETS, JSON.stringify(presets));
     return { success: true };
   } catch (error) {
-    console.error("プリセットの保存に失敗:", error);
+    logger.error("プリセットの保存に失敗:", error);
     return { success: false, error: error as Error };
   }
 };
@@ -54,7 +45,7 @@ export const loadPresets = async (): Promise<StorageResult<Preset[]>> => {
     const data = await AsyncStorage.getItem(STORAGE_KEYS.PRESETS);
     return { success: true, data: data ? (JSON.parse(data) as Preset[]) : [] };
   } catch (error) {
-    console.error("プリセットの読み込みに失敗:", error);
+    logger.error("プリセットの読み込みに失敗:", error);
     return { success: false, error: error as Error, data: [] };
   }
 };
@@ -64,23 +55,17 @@ export const saveNotificationMap = async (
   notificationMap: NotificationMap
 ): Promise<StorageSaveResult> => {
   try {
-    const serialized: SerializedNotificationMap =
-      Object.fromEntries(notificationMap);
-    await AsyncStorage.setItem(
-      STORAGE_KEYS.NOTIFICATION_MAP,
-      JSON.stringify(serialized)
-    );
+    const serialized: SerializedNotificationMap = Object.fromEntries(notificationMap);
+    await AsyncStorage.setItem(STORAGE_KEYS.NOTIFICATION_MAP, JSON.stringify(serialized));
     return { success: true };
   } catch (error) {
-    console.error("通知マッピングの保存に失敗:", error);
+    logger.error("通知マッピングの保存に失敗:", error);
     return { success: false, error: error as Error };
   }
 };
 
 // 通知マッピングを読み込み
-export const loadNotificationMap = async (): Promise<
-  StorageResult<NotificationMap>
-> => {
+export const loadNotificationMap = async (): Promise<StorageResult<NotificationMap>> => {
   try {
     const data = await AsyncStorage.getItem(STORAGE_KEYS.NOTIFICATION_MAP);
     const parsed: SerializedNotificationMap = data ? JSON.parse(data) : {};
@@ -89,22 +74,7 @@ export const loadNotificationMap = async (): Promise<
       data: new Map(Object.entries(parsed)),
     };
   } catch (error) {
-    console.error("通知マッピングの読み込みに失敗:", error);
+    logger.error("通知マッピングの読み込みに失敗:", error);
     return { success: false, error: error as Error, data: new Map() };
-  }
-};
-
-// 全データをクリア（デバッグ用）
-export const clearAllData = async (): Promise<StorageSaveResult> => {
-  try {
-    await AsyncStorage.multiRemove([
-      STORAGE_KEYS.PATIENTS,
-      STORAGE_KEYS.PRESETS,
-      STORAGE_KEYS.NOTIFICATION_MAP,
-    ]);
-    return { success: true };
-  } catch (error) {
-    console.error("データのクリアに失敗:", error);
-    return { success: false, error: error as Error };
   }
 };

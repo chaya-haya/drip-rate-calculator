@@ -6,7 +6,6 @@ import {
   loadPresets,
   saveNotificationMap,
   loadNotificationMap,
-  clearAllData,
 } from "./storage";
 import { STORAGE_KEYS } from "../constants/storageKeys";
 import type { Patient } from "../types/patient";
@@ -16,7 +15,6 @@ beforeEach(() => {
   (AsyncStorage.clear as jest.Mock).mockClear();
   (AsyncStorage.setItem as jest.Mock).mockClear();
   (AsyncStorage.getItem as jest.Mock).mockClear();
-  (AsyncStorage.multiRemove as jest.Mock).mockClear();
 });
 
 const mockPatient: Patient = {
@@ -75,10 +73,7 @@ describe("savePatients", () => {
     const result = await savePatients([]);
 
     expect(result.success).toBe(true);
-    expect(AsyncStorage.setItem).toHaveBeenCalledWith(
-      STORAGE_KEYS.PATIENTS,
-      "[]"
-    );
+    expect(AsyncStorage.setItem).toHaveBeenCalledWith(STORAGE_KEYS.PATIENTS, "[]");
   });
 
   test("保存失敗時にエラーを返す", async () => {
@@ -95,9 +90,7 @@ describe("savePatients", () => {
 describe("loadPatients", () => {
   test("AsyncStorageから患者データを読み込む", async () => {
     const patients = [mockPatient];
-    (AsyncStorage.getItem as jest.Mock).mockResolvedValueOnce(
-      JSON.stringify(patients)
-    );
+    (AsyncStorage.getItem as jest.Mock).mockResolvedValueOnce(JSON.stringify(patients));
 
     const result = await loadPatients();
 
@@ -153,9 +146,7 @@ describe("savePresets", () => {
 describe("loadPresets", () => {
   test("AsyncStorageからプリセットを読み込む", async () => {
     const presets = [mockPreset];
-    (AsyncStorage.getItem as jest.Mock).mockResolvedValueOnce(
-      JSON.stringify(presets)
-    );
+    (AsyncStorage.getItem as jest.Mock).mockResolvedValueOnce(JSON.stringify(presets));
 
     const result = await loadPresets();
 
@@ -207,10 +198,7 @@ describe("saveNotificationMap", () => {
     const result = await saveNotificationMap(new Map());
 
     expect(result.success).toBe(true);
-    expect(AsyncStorage.setItem).toHaveBeenCalledWith(
-      STORAGE_KEYS.NOTIFICATION_MAP,
-      "{}"
-    );
+    expect(AsyncStorage.setItem).toHaveBeenCalledWith(STORAGE_KEYS.NOTIFICATION_MAP, "{}");
   });
 
   test("保存失敗時にエラーを返す", async () => {
@@ -230,9 +218,7 @@ describe("loadNotificationMap", () => {
       "patient-1": "notification-abc",
       "patient-2": "notification-def",
     };
-    (AsyncStorage.getItem as jest.Mock).mockResolvedValueOnce(
-      JSON.stringify(stored)
-    );
+    (AsyncStorage.getItem as jest.Mock).mockResolvedValueOnce(JSON.stringify(stored));
 
     const result = await loadNotificationMap();
 
@@ -263,28 +249,5 @@ describe("loadNotificationMap", () => {
     expect(result.error).toBe(error);
     expect(result.data).toBeInstanceOf(Map);
     expect(result.data.size).toBe(0);
-  });
-});
-
-describe("clearAllData", () => {
-  test("全ストレージキーを削除する", async () => {
-    const result = await clearAllData();
-
-    expect(result.success).toBe(true);
-    expect(AsyncStorage.multiRemove).toHaveBeenCalledWith([
-      STORAGE_KEYS.PATIENTS,
-      STORAGE_KEYS.PRESETS,
-      STORAGE_KEYS.NOTIFICATION_MAP,
-    ]);
-  });
-
-  test("削除失敗時にエラーを返す", async () => {
-    const error = new Error("Remove failed");
-    (AsyncStorage.multiRemove as jest.Mock).mockRejectedValueOnce(error);
-
-    const result = await clearAllData();
-
-    expect(result.success).toBe(false);
-    expect(result.error).toBe(error);
   });
 });

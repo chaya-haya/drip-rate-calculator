@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { usePresets } from '../../src/contexts/PresetsContext';
-import { colors, spacing, fontSize } from '../../src/constants/theme';
+import React, { useState, useEffect } from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { usePresets } from "../../src/contexts/PresetsContext";
+import { colors, spacing, fontSize } from "../../src/constants/theme";
 
 // プリセット編集画面
 export default function PresetEditScreen() {
   const { id: presetId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { getPreset, updatePreset, deletePreset } = usePresets();
-  const [name, setName] = useState('');
+  const [name, setName] = useState("");
 
   const preset = getPreset(presetId!);
 
@@ -28,11 +28,11 @@ export default function PresetEditScreen() {
   };
 
   const handleDelete = () => {
-    Alert.alert('プリセットの削除', 'このプリセットを削除しますか？', [
-      { text: 'キャンセル', style: 'cancel' },
+    Alert.alert("プリセットの削除", "このプリセットを削除しますか？", [
+      { text: "キャンセル", style: "cancel" },
       {
-        text: '削除',
-        style: 'destructive',
+        text: "削除",
+        style: "destructive",
         onPress: async () => {
           await deletePreset(presetId!);
           router.back();
@@ -49,11 +49,11 @@ export default function PresetEditScreen() {
     );
   }
 
-  const infusionSetName = preset.infusionSet?.name || '成人用';
+  const infusionSetName = preset.infusionSet?.name || "成人用";
   const timeText = `${preset.hours || 0}時間${preset.minutes || 0}分`;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
           <Text style={styles.backText}>← 戻る</Text>
@@ -96,9 +96,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     backgroundColor: colors.surface,
@@ -111,13 +111,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: fontSize.large,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.text,
   },
   saveText: {
     color: colors.primary,
     fontSize: fontSize.medium,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   content: {
     padding: spacing.md,
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
     borderColor: colors.error,
     borderRadius: 8,
     padding: spacing.md,
-    alignItems: 'center',
+    alignItems: "center",
   },
   deleteButtonText: {
     color: colors.error,
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: fontSize.medium,
     color: colors.error,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: spacing.xl,
   },
 });

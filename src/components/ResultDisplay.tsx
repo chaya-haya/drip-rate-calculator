@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, fontSize } from '../constants/theme';
-import { formatTime } from '../features/calculation/logic';
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
+import { colors, spacing, fontSize } from "../constants/theme";
+import { formatTime } from "../features/calculation/logic";
 
 interface ResultDisplayProps {
   dropsPerMinute: number;
@@ -23,9 +23,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
     return (
       <View style={styles.container}>
         <View style={styles.placeholder}>
-          <Text style={styles.placeholderText}>
-            輸液量と投与時間を入力してください
-          </Text>
+          <Text style={styles.placeholderText}>輸液量と投与時間を入力してください</Text>
         </View>
       </View>
     );
@@ -73,7 +71,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   placeholder: {
     padding: spacing.xl,
@@ -81,17 +79,17 @@ const styles = StyleSheet.create({
   placeholderText: {
     fontSize: fontSize.medium,
     color: colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
   mainResult: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "baseline",
+    justifyContent: "center",
     marginBottom: spacing.lg,
   },
   mainValue: {
     fontSize: 64,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.primary,
   },
   mainUnit: {
@@ -100,13 +98,13 @@ const styles = StyleSheet.create({
     marginLeft: spacing.sm,
   },
   subResults: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: "100%",
+    flexWrap: "wrap",
   },
   subResultItem: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingHorizontal: spacing.sm,
   },
   subLabel: {
@@ -116,7 +114,7 @@ const styles = StyleSheet.create({
   },
   subValue: {
     fontSize: fontSize.medium,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.text,
   },
   divider: {

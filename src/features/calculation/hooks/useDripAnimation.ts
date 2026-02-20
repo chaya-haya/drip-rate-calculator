@@ -22,10 +22,7 @@ export const useDripAnimation = (
   const [isAnimating, setIsAnimating] = useState(false);
 
   // アニメーション間隔の最小値制限
-  const effectiveInterval = Math.max(
-    dropInterval,
-    ANIMATION_CONFIG.MIN_INTERVAL_MS
-  );
+  const effectiveInterval = Math.max(dropInterval, ANIMATION_CONFIG.MIN_INTERVAL_MS);
 
   // ハプティックフィードバック
   const triggerHaptic = useCallback(async () => {
@@ -76,9 +73,12 @@ export const useDripAnimation = (
       if (finished && isActive && effectiveInterval > 0) {
         // 次の滴下までの待機時間
         const waitTime = effectiveInterval - fallDuration;
-        animationRef.current = setTimeout(() => {
-          animateDrop();
-        }, Math.max(waitTime, 50));
+        animationRef.current = setTimeout(
+          () => {
+            animateDrop();
+          },
+          Math.max(waitTime, 50)
+        );
       }
     });
   }, [dropPosition, dropOpacity, effectiveInterval, isActive, triggerHaptic]);

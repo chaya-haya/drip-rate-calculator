@@ -1,37 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  RefreshControl,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { usePatients } from '../../src/contexts/PatientsContext';
-import { PatientCard } from '../../src/components/PatientCard';
-import { colors, spacing, fontSize } from '../../src/constants/theme';
-import type { PatientWithStatus, PatientStatusId } from '../../src/types';
+import React, { useState } from "react";
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, RefreshControl } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import { usePatients } from "../../src/contexts/PatientsContext";
+import { PatientCard } from "../../src/components/PatientCard";
+import { colors, spacing, fontSize } from "../../src/constants/theme";
+import type { PatientWithStatus, PatientStatusId } from "../../src/types";
 
 // 患者一覧画面
 export default function PatientListScreen() {
   const router = useRouter();
   const { patients, isLoading, addPatient } = usePatients();
   const [refreshing, setRefreshing] = useState(false);
-  const [, setTick] = useState(0);
-
-  // 60秒ごとに残り時間を更新
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTick((t) => t + 1);
-    }, 60000);
-    return () => clearInterval(interval);
-  }, []);
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    setTick((t) => t + 1);
     setRefreshing(false);
   };
 
@@ -56,7 +39,7 @@ export default function PatientListScreen() {
   });
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
       <View style={styles.header}>
         <Text style={styles.title}>点滴管理</Text>
         <TouchableOpacity style={styles.addButton} onPress={handleAddPatient} activeOpacity={0.7}>
@@ -96,9 +79,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     backgroundColor: colors.surface,
@@ -107,7 +90,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: fontSize.xlarge,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.text,
   },
   addButton: {
@@ -119,7 +102,7 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: colors.textLight,
     fontSize: fontSize.medium,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   list: {
     flex: 1,
@@ -128,13 +111,13 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   emptyContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: spacing.xl * 2,
   },
   emptyText: {
     fontSize: fontSize.medium,
     color: colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
   emptyHint: {
     fontSize: fontSize.small,

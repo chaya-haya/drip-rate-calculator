@@ -1,4 +1,5 @@
 import * as Notifications from "expo-notifications";
+import { logger } from "./logger";
 
 // 通知の表示設定
 Notifications.setNotificationHandler({
@@ -14,8 +15,7 @@ Notifications.setNotificationHandler({
 // 通知権限をリクエスト
 export const requestNotificationPermission = async (): Promise<boolean> => {
   try {
-    const { status: existingStatus } =
-      await Notifications.getPermissionsAsync();
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
 
     if (existingStatus !== "granted") {
@@ -25,7 +25,7 @@ export const requestNotificationPermission = async (): Promise<boolean> => {
 
     return finalStatus === "granted";
   } catch (error) {
-    console.warn("通知権限の取得に失敗:", error);
+    logger.warn("通知権限の取得に失敗:", error);
     return false;
   }
 };
@@ -33,20 +33,17 @@ export const requestNotificationPermission = async (): Promise<boolean> => {
 // 患者通知をスケジュール
 export const schedulePatientNotification = async (
   patientId: string,
-  patientName: string,
   endTime: Date,
   timingMinutes: number
 ): Promise<string | null> => {
   try {
     // 通知時刻を計算（終了X分前）
-    const notificationTime = new Date(
-      endTime.getTime() - timingMinutes * 60 * 1000
-    );
+    const notificationTime = new Date(endTime.getTime() - timingMinutes * 60 * 1000);
     const now = new Date();
 
     // 通知時刻が過去の場合はスケジュールしない
     if (notificationTime <= now) {
-      console.warn("通知時刻が過去です");
+      logger.warn("通知時刻が過去です");
       return null;
     }
 
@@ -58,7 +55,7 @@ export const schedulePatientNotification = async (
     const id = await Notifications.scheduleNotificationAsync({
       content: {
         title: "点滴終了のお知らせ",
-        body: `${patientName} の点滴終了まであと${timingMinutes}分です`,
+        body: `点滴終了まであと${timingMinutes}分です`,
         sound: true,
         data: { patientId },
       },
@@ -70,21 +67,19 @@ export const schedulePatientNotification = async (
 
     return id;
   } catch (error) {
-    console.warn("通知のスケジュールに失敗:", error);
+    logger.warn("通知のスケジュールに失敗:", error);
     return null;
   }
 };
 
 // 特定の通知をキャンセル
-export const cancelNotification = async (
-  notificationId: string | null
-): Promise<void> => {
+export const cancelNotification = async (notificationId: string | null): Promise<void> => {
   try {
     if (notificationId) {
       await Notifications.cancelScheduledNotificationAsync(notificationId);
     }
   } catch (error) {
-    console.warn("通知のキャンセルに失敗:", error);
+    logger.warn("通知のキャンセルに失敗:", error);
   }
 };
 
@@ -93,18 +88,16 @@ export const cancelAllNotifications = async (): Promise<void> => {
   try {
     await Notifications.cancelAllScheduledNotificationsAsync();
   } catch (error) {
-    console.warn("通知のキャンセルに失敗:", error);
+    logger.warn("通知のキャンセルに失敗:", error);
   }
 };
 
 // スケジュール済み通知を取得
-export const getScheduledNotifications = async (): Promise<
-  Notifications.NotificationRequest[]
-> => {
+export const getScheduledNotifications = async (): Promise<Notifications.NotificationRequest[]> => {
   try {
     return await Notifications.getAllScheduledNotificationsAsync();
   } catch (error) {
-    console.warn("スケジュール済み通知の取得に失敗:", error);
+    logger.warn("スケジュール済み通知の取得に失敗:", error);
     return [];
   }
 };

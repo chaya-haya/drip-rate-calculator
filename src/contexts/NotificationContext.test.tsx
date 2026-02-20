@@ -1,9 +1,6 @@
 import React from "react";
 import { renderHook, act, waitFor } from "@testing-library/react-native";
-import {
-  NotificationProvider,
-  useNotifications,
-} from "./NotificationContext";
+import { NotificationProvider, useNotifications } from "./NotificationContext";
 import {
   requestNotificationPermission,
   schedulePatientNotification,
@@ -21,9 +18,7 @@ jest.mock("../lib/notification", () => ({
 
 jest.mock("../lib/storage", () => ({
   saveNotificationMap: jest.fn().mockResolvedValue({ success: true }),
-  loadNotificationMap: jest
-    .fn()
-    .mockResolvedValue({ success: true, data: new Map() }),
+  loadNotificationMap: jest.fn().mockResolvedValue({ success: true, data: new Map() }),
 }));
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -101,21 +96,11 @@ describe("NotificationContext", () => {
       let notifId: string | null;
 
       await act(async () => {
-        notifId = await result.current.scheduleForPatient(
-          "patient-1",
-          "田中太郎",
-          endTime,
-          5
-        );
+        notifId = await result.current.scheduleForPatient("patient-1", endTime, 5);
       });
 
       expect(notifId!).toBe("notif-123");
-      expect(schedulePatientNotification).toHaveBeenCalledWith(
-        "patient-1",
-        "田中太郎",
-        endTime,
-        5
-      );
+      expect(schedulePatientNotification).toHaveBeenCalledWith("patient-1", endTime, 5);
       expect(saveNotificationMap).toHaveBeenCalled();
       expect(result.current.isScheduledForPatient("patient-1")).toBe(true);
     });
@@ -134,12 +119,7 @@ describe("NotificationContext", () => {
 
       const endTime = new Date("2024-01-15T12:00:00");
       await act(async () => {
-        await result.current.scheduleForPatient(
-          "patient-1",
-          "田中太郎",
-          endTime,
-          5
-        );
+        await result.current.scheduleForPatient("patient-1", endTime, 5);
       });
 
       expect(cancelNotification).toHaveBeenCalledWith("old-notif");

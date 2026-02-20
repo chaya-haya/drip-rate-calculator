@@ -7,10 +7,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     process.argv.some((arg) => arg.includes("prebuild")) ||
     process.env.APPLE_TARGETS === "true";
 
-  const plugins: ExpoConfig["plugins"] = [
-    ["expo-notifications", { sounds: [] }],
-    "expo-router",
-  ];
+  const plugins: ExpoConfig["plugins"] = [["expo-notifications", { sounds: [] }], "expo-router"];
 
   if (isPrebuild) {
     plugins.push("@bacons/apple-targets");
@@ -32,11 +29,21 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       backgroundColor: "#ffffff",
     },
     ios: {
-      supportsTablet: true,
+      supportsTablet: false,
       bundleIdentifier: "com.dripcalculator.app",
+      buildNumber: "1",
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
+        NSPrivacyAccessedAPITypes: [
+          {
+            NSPrivacyAccessedAPIType: "NSPrivacyAccessedAPICategoryUserDefaults",
+            NSPrivacyAccessedAPITypeReasons: ["CA92.1"],
+          },
+        ],
       },
+    },
+    android: {
+      package: "com.dripcalculator.app",
     },
     web: {
       favicon: "./assets/favicon.png",

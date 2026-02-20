@@ -100,13 +100,7 @@ describe("calculateDropsPerMinute", () => {
   describe("医療リファレンスシナリオ - 成人", () => {
     test.each(MEDICAL_SCENARIOS.adult)(
       "$name = $expectedRounded滴/分（四捨五入）",
-      ({
-        volume,
-        timeMinutes,
-        dropsPerMl,
-        expectedDropsPerMin,
-        expectedRounded,
-      }) => {
+      ({ volume, timeMinutes, dropsPerMl, expectedDropsPerMin, expectedRounded }) => {
         const result = calculateDropsPerMinute(volume, timeMinutes, dropsPerMl);
         expect(result).toBeCloseTo(expectedDropsPerMin, 1);
         expect(Math.round(result)).toBe(expectedRounded);
@@ -117,13 +111,7 @@ describe("calculateDropsPerMinute", () => {
   describe("医療リファレンスシナリオ - 小児", () => {
     test.each(MEDICAL_SCENARIOS.pediatric)(
       "$name = $expectedRounded滴/分（四捨五入）",
-      ({
-        volume,
-        timeMinutes,
-        dropsPerMl,
-        expectedDropsPerMin,
-        expectedRounded,
-      }) => {
+      ({ volume, timeMinutes, dropsPerMl, expectedDropsPerMin, expectedRounded }) => {
         const result = calculateDropsPerMinute(volume, timeMinutes, dropsPerMl);
         expect(result).toBeCloseTo(expectedDropsPerMin, 1);
         expect(Math.round(result)).toBe(expectedRounded);

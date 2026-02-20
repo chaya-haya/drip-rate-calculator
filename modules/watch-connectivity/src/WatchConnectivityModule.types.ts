@@ -3,7 +3,7 @@ export interface WatchPatientData {
   id: string;
   roomNumber: string;
   bedNumber: string;
-  infusionSetType: 'adult' | 'pediatric';
+  infusionSetType: "adult" | "pediatric";
   dropsPerMl: number;
   volume: number;
   totalMinutes: number;
@@ -23,7 +23,7 @@ export interface WatchSyncPayload {
 
 // WatchからiPhoneへ送信するコマンド
 export interface WatchCommand {
-  type: 'startInfusion' | 'stopInfusion' | 'requestSync';
+  type: "startInfusion" | "stopInfusion" | "requestSync";
   patientId: string;
   timestamp: number;
 }

@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { fontSize, spacing } from '../constants/theme';
-import type { PatientStatusConfig } from '../types';
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
+import { fontSize, spacing } from "../constants/theme";
+import type { PatientStatusConfig } from "../types";
 
 interface StatusBadgeProps {
   status: PatientStatusConfig;
@@ -23,8 +23,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   text: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: fontSize.small,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

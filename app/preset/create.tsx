@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -8,26 +8,26 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { usePresets } from '../../src/contexts/PresetsContext';
-import { InfusionSetSelector } from '../../src/components/InfusionSetSelector';
-import { InputForm } from '../../src/components/InputForm';
-import { INFUSION_SETS } from '../../src/constants/infusionSets';
-import { colors, spacing, fontSize } from '../../src/constants/theme';
-import type { InfusionSet } from '../../src/types';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import { usePresets } from "../../src/contexts/PresetsContext";
+import { InfusionSetSelector } from "../../src/components/InfusionSetSelector";
+import { InputForm } from "../../src/components/InputForm";
+import { INFUSION_SETS } from "../../src/constants/infusionSets";
+import { colors, spacing, fontSize } from "../../src/constants/theme";
+import type { InfusionSet } from "../../src/types";
 
 // プリセット新規作成画面
 export default function PresetCreateScreen() {
   const router = useRouter();
   const { addPreset } = usePresets();
 
-  const [name, setName] = useState('');
+  const [name, setName] = useState("");
   const [infusionSet, setInfusionSet] = useState<InfusionSet>(INFUSION_SETS.ADULT);
-  const [volume, setVolume] = useState('');
-  const [hours, setHours] = useState('');
-  const [minutes, setMinutes] = useState('');
+  const [volume, setVolume] = useState("");
+  const [hours, setHours] = useState("");
+  const [minutes, setMinutes] = useState("");
 
   const isValid = name.trim() && volume && (hours || minutes);
 
@@ -45,7 +45,7 @@ export default function PresetCreateScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
           <Text style={styles.cancelText}>キャンセル</Text>
@@ -57,7 +57,7 @@ export default function PresetCreateScreen() {
       </View>
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardAvoid}
       >
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
@@ -93,9 +93,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     backgroundColor: colors.surface,
@@ -108,13 +108,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: fontSize.large,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.text,
   },
   saveText: {
     color: colors.primary,
     fontSize: fontSize.medium,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   saveTextDisabled: {
     color: colors.border,

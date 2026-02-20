@@ -1,19 +1,28 @@
-import { useEffect, useCallback, useRef } from 'react';
-import { Platform } from 'react-native';
+import { useEffect, useCallback, useRef } from "react";
+import { logger } from "../lib/logger";
+import { Platform } from "react-native";
 import {
   updateApplicationContext,
   sendMessage,
+  transferUserInfo,
   isWatchConnected,
   addMessageListener,
   removeMessageListener,
-} from '../../modules/watch-connectivity';
-import type { WatchCommand, WatchPatientData } from '../../modules/watch-connectivity';
-import type { PatientWithStatus } from '../types';
+} from "../../modules/watch-connectivity";
+import type { WatchCommand, WatchPatientData } from "../../modules/watch-connectivity";
+import type { PatientWithStatus } from "../types";
 import {
   calculateDropsPerMinute,
   hoursToMinutes,
   calculateDropInterval,
-} from '../features/calculation/logic';
+} from "../features/calculation/logic";
+
+// WatchCommandの型ガード（不正データによるクラッシュ防止）
+export const isWatchCommand = (msg: unknown): msg is WatchCommand => {
+  if (typeof msg !== "object" || msg === null) return false;
+  const obj = msg as Record<string, unknown>;
+  return typeof obj.type === "string" && typeof obj.patientId === "string";
+};
 
 interface UseWatchSyncOptions {
   patients: PatientWithStatus[];
@@ -48,7 +57,7 @@ export const useWatchSync = ({
       id: patient.id,
       roomNumber: patient.roomNumber,
       bedNumber: patient.bedNumber,
-      infusionSetType: patient.infusionSet.id as 'adult' | 'pediatric',
+      infusionSetType: patient.infusionSet.id as "adult" | "pediatric",
       dropsPerMl: patient.infusionSet.dropsPerMl,
       volume: volumeNum,
       totalMinutes,
@@ -68,7 +77,7 @@ export const useWatchSync = ({
 
   // 患者データをWatchに同期
   const syncToWatch = useCallback(async () => {
-    if (Platform.OS !== 'ios') return;
+    if (Platform.OS !== "ios") return;
 
     const watchPatients = patientsRef.current.map(toWatchData);
     const payload = {
@@ -77,38 +86,46 @@ export const useWatchSync = ({
     };
 
     try {
-      await updateApplicationContext(payload as unknown as Record<string, unknown>);
-
-      // 到達可能ならsendMessageで即時配信も試行
+      // 到達可能ならsendMessageで即時配信を試行
       const connected = await isWatchConnected();
       if (connected) {
-        await sendMessage(payload as unknown as Record<string, unknown>).catch(() => {
-          // applicationContextが主要配信手段なので無視
-        });
+        await sendMessage(payload as unknown as Record<string, unknown>);
+        return;
       }
-    } catch (error) {
-      console.warn('[WatchSync] Failed to sync:', error);
+    } catch {
+      // sendMessage失敗時はフォールバック
+    }
+
+    try {
+      await updateApplicationContext(payload as unknown as Record<string, unknown>);
+    } catch {
+      // applicationContext失敗時はtransferUserInfoにフォールバック
+      try {
+        await transferUserInfo(payload as unknown as Record<string, unknown>);
+      } catch (error) {
+        logger.warn("[WatchSync] Failed to sync:", error);
+      }
     }
   }, [toWatchData]);
 
   // 患者データ変更時に同期
   useEffect(() => {
-    if (Platform.OS !== 'ios') return;
+    if (Platform.OS !== "ios") return;
     syncToWatch();
   }, [patients, syncToWatch]);
 
   // Watchからのコマンドをリッスン
   useEffect(() => {
-    if (Platform.OS !== 'ios') return;
+    if (Platform.OS !== "ios") return;
 
     const handleWatchMessage = async (message: unknown) => {
-      const command = message as WatchCommand;
-      if (!command.type || !command.patientId) return;
+      if (!isWatchCommand(message)) return;
+      const command = message;
 
       const patient = patientsRef.current.find((p) => p.id === command.patientId);
 
       switch (command.type) {
-        case 'startInfusion': {
+        case "startInfusion": {
           if (!patient) return;
           const volumeNum = parseFloat(patient.volume) || 0;
           const hoursNum = parseInt(patient.hours, 10) || 0;
@@ -120,11 +137,11 @@ export const useWatchSync = ({
           }
           break;
         }
-        case 'stopInfusion': {
+        case "stopInfusion": {
           await stopPatient(command.patientId);
           break;
         }
-        case 'requestSync': {
+        case "requestSync": {
           await syncToWatch();
           break;
         }

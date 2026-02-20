@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   ScrollView,
   View,
@@ -8,47 +8,43 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
-import { usePatients } from '../../src/contexts/PatientsContext';
-import { usePresets } from '../../src/contexts/PresetsContext';
-import { useNotifications } from '../../src/contexts/NotificationContext';
+import { usePatients } from "../../src/contexts/PatientsContext";
+import { usePresets } from "../../src/contexts/PresetsContext";
+import { useNotifications } from "../../src/contexts/NotificationContext";
 
-import { PatientIdentifier } from '../../src/components/PatientIdentifier';
-import { InfusionSetSelector } from '../../src/components/InfusionSetSelector';
-import { InputForm } from '../../src/components/InputForm';
-import { ResultDisplay } from '../../src/components/ResultDisplay';
-import { DripAnimation } from '../../src/components/DripAnimation';
-import { NotificationControl } from '../../src/components/NotificationControl';
-import { HapticControl } from '../../src/components/HapticControl';
-import { SavePresetModal } from '../../src/components/SavePresetModal';
+import { PatientIdentifier } from "../../src/components/PatientIdentifier";
+import { InfusionSetSelector } from "../../src/components/InfusionSetSelector";
+import { InputForm } from "../../src/components/InputForm";
+import { ResultDisplay } from "../../src/components/ResultDisplay";
+import { DripAnimation } from "../../src/components/DripAnimation";
+import { NotificationControl } from "../../src/components/NotificationControl";
+import { HapticControl } from "../../src/components/HapticControl";
+import { SavePresetModal } from "../../src/components/SavePresetModal";
 
-import { useCalculation } from '../../src/features/calculation/hooks/useCalculation';
-import { HAPTIC_INTENSITY } from '../../src/features/calculation/hooks/useDripAnimation';
-import { calculateEndTime } from '../../src/features/calculation/logic';
+import { useCalculation } from "../../src/features/calculation/hooks/useCalculation";
+import { HAPTIC_INTENSITY } from "../../src/features/calculation/hooks/useDripAnimation";
+import { calculateEndTime } from "../../src/features/calculation/logic";
 
-import { colors, spacing, fontSize, commonStyles } from '../../src/constants/theme';
-import type {
-  NotificationTimingOption,
-  HapticIntensity,
-  PresetCreateData,
-} from '../../src/types';
+import { colors, spacing, fontSize, commonStyles } from "../../src/constants/theme";
+import type { NotificationTimingOption, HapticIntensity, PresetCreateData } from "../../src/types";
 
 // 患者詳細・編集画面
 export default function PatientDetailScreen() {
   const { id: patientId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { getPatient, updatePatient, deletePatient, startPatient, stopPatient } = usePatients();
+  const { getPatient, updatePatient, deletePatient, stopPatient } = usePatients();
   const { addPreset } = usePresets();
   const { scheduleForPatient, cancelForPatient, hasPermission } = useNotifications();
 
   const patient = getPatient(patientId!);
 
   // フォーム状態
-  const [roomNumber, setRoomNumber] = useState('');
-  const [bedNumber, setBedNumber] = useState('');
+  const [roomNumber, setRoomNumber] = useState("");
+  const [bedNumber, setBedNumber] = useState("");
 
   const {
     volume,
@@ -70,8 +66,8 @@ export default function PatientDetailScreen() {
   // 通知・ハプティック設定
   const [notificationEnabled, setNotificationEnabled] = useState(false);
   const [notificationTiming, setNotificationTiming] = useState<NotificationTimingOption>({
-    id: '10',
-    label: '10分前',
+    id: "10",
+    label: "10分前",
     minutes: 10,
   });
   const [hapticEnabled, setHapticEnabled] = useState(false);
@@ -84,18 +80,32 @@ export default function PatientDetailScreen() {
   // プリセット保存モーダル
   const [showPresetModal, setShowPresetModal] = useState(false);
 
+  // 保存済みの値（変更検知の基準点）
+  const originalValues = useRef<{
+    roomNumber: string;
+    bedNumber: string;
+    volume: string;
+    hours: string;
+    minutes: string;
+    infusionSet: typeof infusionSet;
+    notificationEnabled: boolean;
+    notificationTiming: NotificationTimingOption;
+    hapticEnabled: boolean;
+    hapticIntensity: HapticIntensity;
+  } | null>(null);
+
   // 患者データの読み込み
   useEffect(() => {
     if (patient) {
-      setRoomNumber(patient.roomNumber || '');
-      setBedNumber(patient.bedNumber || '');
-      setVolume(patient.volume || '');
-      setHours(patient.hours || '');
-      setMinutes(patient.minutes || '');
+      setRoomNumber(patient.roomNumber || "");
+      setBedNumber(patient.bedNumber || "");
+      setVolume(patient.volume || "");
+      setHours(patient.hours || "");
+      setMinutes(patient.minutes || "");
       setInfusionSet(patient.infusionSet);
       setNotificationEnabled(patient.notificationEnabled || false);
       setNotificationTiming(
-        patient.notificationTiming || { id: '10', label: '10分前', minutes: 10 }
+        patient.notificationTiming || { id: "10", label: "10分前", minutes: 10 }
       );
       setHapticEnabled(patient.hapticEnabled || false);
       setHapticIntensity(patient.hapticIntensity || HAPTIC_INTENSITY.MEDIUM);
@@ -103,8 +113,56 @@ export default function PatientDetailScreen() {
       if (patient.endTime) {
         setFixedEndTime(new Date(patient.endTime));
       }
+
+      // 保存済み値を記録（変更検知の基準点）
+      originalValues.current = {
+        roomNumber: patient.roomNumber || "",
+        bedNumber: patient.bedNumber || "",
+        volume: patient.volume || "",
+        hours: patient.hours || "",
+        minutes: patient.minutes || "",
+        infusionSet: patient.infusionSet,
+        notificationEnabled: patient.notificationEnabled || false,
+        notificationTiming: patient.notificationTiming || {
+          id: "10",
+          label: "10分前",
+          minutes: 10,
+        },
+        hapticEnabled: patient.hapticEnabled || false,
+        hapticIntensity: patient.hapticIntensity || HAPTIC_INTENSITY.MEDIUM,
+      };
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- patientオブジェクト全体を依存に入れると無限ループするため、IDのみで制御
   }, [patient?.id]);
+
+  // 変更有無の検知
+  const hasChanges = useMemo(() => {
+    const orig = originalValues.current;
+    if (!orig) return false;
+    return (
+      roomNumber !== orig.roomNumber ||
+      bedNumber !== orig.bedNumber ||
+      volume !== orig.volume ||
+      hours !== orig.hours ||
+      minutes !== orig.minutes ||
+      infusionSet !== orig.infusionSet ||
+      notificationEnabled !== orig.notificationEnabled ||
+      notificationTiming.id !== orig.notificationTiming.id ||
+      hapticEnabled !== orig.hapticEnabled ||
+      hapticIntensity !== orig.hapticIntensity
+    );
+  }, [
+    roomNumber,
+    bedNumber,
+    volume,
+    hours,
+    minutes,
+    infusionSet,
+    notificationEnabled,
+    notificationTiming,
+    hapticEnabled,
+    hapticIntensity,
+  ]);
 
   // 表示用終了時刻
   const displayEndTime = useMemo(() => {
@@ -117,9 +175,7 @@ export default function PatientDetailScreen() {
 
   // 患者名
   const patientName =
-    roomNumber || bedNumber
-      ? `${roomNumber || '---'}号室 ${bedNumber || '-'}番ベッド`
-      : '新規患者';
+    roomNumber || bedNumber ? `${roomNumber || "---"}号室 ${bedNumber || "-"}番ベッド` : "新規患者";
 
   // 保存
   const handleSave = async () => {
@@ -137,17 +193,23 @@ export default function PatientDetailScreen() {
     });
   };
 
-  // 戻る（確認ダイアログ付き）
+  // 戻る（変更がなければダイアログをスキップ）
   const handleBackWithConfirmation = () => {
-    Alert.alert('設定の保存', '変更を保存しますか？', [
+    // 変更がなければダイアログをスキップして一覧へ戻る
+    if (!hasChanges) {
+      router.back();
+      return;
+    }
+
+    Alert.alert("設定の保存", "変更を保存しますか？", [
       {
-        text: '保存しない',
-        style: 'destructive',
+        text: "保存しない",
+        style: "destructive",
         onPress: () => router.back(),
       },
-      { text: 'キャンセル', style: 'cancel' },
+      { text: "キャンセル", style: "cancel" },
       {
-        text: '保存',
+        text: "保存",
         onPress: async () => {
           await handleSave();
           router.back();
@@ -162,11 +224,29 @@ export default function PatientDetailScreen() {
     setFixedEndTime(endTime);
     setIsRunning(true);
 
-    await startPatient(patientId!, endTime);
+    // フォームデータと実行状態を1回のupdatePatientで原子的に保存する（stale closure回避）
+    await updatePatient(patientId!, {
+      roomNumber,
+      bedNumber,
+      volume,
+      hours,
+      minutes,
+      infusionSet,
+      notificationEnabled,
+      notificationTiming,
+      hapticEnabled,
+      hapticIntensity,
+      isRunning: true,
+      startedAt: new Date().toISOString(),
+      endTime: endTime.toISOString(),
+    });
 
     if (notificationEnabled) {
-      await scheduleForPatient(patientId!, patientName, endTime, notificationTiming.minutes);
+      await scheduleForPatient(patientId!, endTime, notificationTiming.minutes);
     }
+
+    // 患者一覧へ戻る（保存ダイアログをスキップ）
+    router.back();
   };
 
   // 停止
@@ -180,11 +260,11 @@ export default function PatientDetailScreen() {
 
   // 削除
   const handleDelete = () => {
-    Alert.alert('患者の削除', 'この患者を削除しますか？', [
-      { text: 'キャンセル', style: 'cancel' },
+    Alert.alert("患者の削除", "この患者を削除しますか？", [
+      { text: "キャンセル", style: "cancel" },
       {
-        text: '削除',
-        style: 'destructive',
+        text: "削除",
+        style: "destructive",
         onPress: async () => {
           await cancelForPatient(patientId!);
           await deletePatient(patientId!);
@@ -204,7 +284,7 @@ export default function PatientDetailScreen() {
     setNotificationEnabled(enabled);
 
     if (enabled && isRunning && fixedEndTime) {
-      await scheduleForPatient(patientId!, patientName, fixedEndTime, notificationTiming.minutes);
+      await scheduleForPatient(patientId!, fixedEndTime, notificationTiming.minutes);
     } else {
       await cancelForPatient(patientId!);
     }
@@ -215,7 +295,7 @@ export default function PatientDetailScreen() {
     setNotificationTiming(timing);
 
     if (notificationEnabled && isRunning && fixedEndTime) {
-      await scheduleForPatient(patientId!, patientName, fixedEndTime, timing.minutes);
+      await scheduleForPatient(patientId!, fixedEndTime, timing.minutes);
     }
   };
 
@@ -228,7 +308,7 @@ export default function PatientDetailScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={handleBackWithConfirmation}>
           <Text style={styles.backText}>← 戻る</Text>
@@ -240,7 +320,7 @@ export default function PatientDetailScreen() {
       </View>
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardAvoid}
       >
         <ScrollView
@@ -334,7 +414,11 @@ export default function PatientDetailScreen() {
               </View>
             )}
 
-            <InfusionSetSelector selectedSet={infusionSet} onSelectSet={setInfusionSet} disabled={isRunning} />
+            <InfusionSetSelector
+              selectedSet={infusionSet}
+              onSelectSet={setInfusionSet}
+              disabled={isRunning}
+            />
 
             <InputForm
               volume={volume}
@@ -396,9 +480,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     backgroundColor: colors.surface,
@@ -411,10 +495,10 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: fontSize.large,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.text,
     flex: 1,
-    textAlign: 'center',
+    textAlign: "center",
     marginHorizontal: spacing.sm,
   },
   headerSpacer: {
@@ -431,12 +515,12 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: fontSize.large,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.text,
     marginBottom: spacing.md,
   },
   presetButtons: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: spacing.sm,
     marginBottom: spacing.md,
   },
@@ -445,12 +529,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryLight,
     borderRadius: 8,
     padding: spacing.sm,
-    alignItems: 'center',
+    alignItems: "center",
   },
   presetButtonText: {
     color: colors.primaryDark,
     fontSize: fontSize.small,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   controlButtons: {
     marginTop: spacing.lg,
@@ -462,22 +546,22 @@ const styles = StyleSheet.create({
     backgroundColor: colors.secondary,
     borderRadius: 12,
     padding: spacing.lg,
-    alignItems: 'center',
+    alignItems: "center",
   },
   startButtonText: {
     fontSize: fontSize.large,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.textLight,
   },
   stopButton: {
     backgroundColor: colors.error,
     borderRadius: 12,
     padding: spacing.lg,
-    alignItems: 'center',
+    alignItems: "center",
   },
   stopButtonText: {
     fontSize: fontSize.large,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.textLight,
   },
   deleteButton: {
@@ -488,7 +572,7 @@ const styles = StyleSheet.create({
     borderColor: colors.error,
     borderRadius: 8,
     padding: spacing.md,
-    alignItems: 'center',
+    alignItems: "center",
   },
   deleteButtonText: {
     fontSize: fontSize.medium,
@@ -497,29 +581,29 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: fontSize.medium,
     color: colors.error,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: spacing.xl,
   },
   validationErrorContainer: {
-    backgroundColor: '#FFF3E0',
+    backgroundColor: "#FFF3E0",
     borderRadius: 8,
     padding: spacing.sm,
     marginTop: spacing.sm,
   },
   validationErrorText: {
     fontSize: fontSize.small,
-    color: '#E65100',
-    textAlign: 'center',
+    color: "#E65100",
+    textAlign: "center",
   },
   lockedBanner: {
-    backgroundColor: '#FFF3E0',
+    backgroundColor: "#FFF3E0",
     borderRadius: 8,
     padding: spacing.sm,
     marginBottom: spacing.md,
   },
   lockedBannerText: {
     fontSize: fontSize.small,
-    color: '#E65100',
-    textAlign: 'center',
+    color: "#E65100",
+    textAlign: "center",
   },
 });

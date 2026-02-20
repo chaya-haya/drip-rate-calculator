@@ -14,9 +14,15 @@
     "build:dev-sim": "eas build --profile development-simulator --platform ios",
     "build:preview": "eas build --profile preview --platform ios",
     "build:production": "eas build --profile production --platform ios",
-    "submit": "eas submit --platform ios"
+    "submit": "eas submit --platform ios",
+    "android": "expo run:android",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
+    "@bacons/apple-targets": "^4.0.3",
     "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~54.0.33",
     "expo-crypto": "~15.0.8",
@@ -36,8 +42,12 @@
     "@testing-library/react-native": "^13.3.3",
     "@types/jest": "^30.0.0",
     "@types/react": "^19.2.13",
+    "eslint": "^9.39.2",
+    "eslint-config-expo": "^10.0.0",
+    "eslint-config-prettier": "^10.1.8",
     "jest": "^29.7.0",
     "jest-expo": "^54.0.17",
+    "prettier": "^3.8.1",
     "typescript": "^5.9.3"
   }
 }

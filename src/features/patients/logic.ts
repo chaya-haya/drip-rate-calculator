@@ -3,9 +3,7 @@ import type { PatientStatusConfig } from "../../types/infusion";
 import type { Patient } from "../../types/patient";
 
 // 患者のステータスを判定
-export const calculatePatientStatus = (
-  patient: Patient
-): PatientStatusConfig => {
+export const calculatePatientStatus = (patient: Patient): PatientStatusConfig => {
   if (!patient.isRunning || !patient.endTime) {
     return PATIENT_STATUS.WAITING;
   }

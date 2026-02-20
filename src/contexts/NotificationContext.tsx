@@ -21,9 +21,7 @@ const NotificationContext = createContext<NotificationContextValue | null>(null)
 export const useNotifications = (): NotificationContextValue => {
   const context = useContext(NotificationContext);
   if (!context) {
-    throw new Error(
-      "useNotifications must be used within a NotificationProvider"
-    );
+    throw new Error("useNotifications must be used within a NotificationProvider");
   }
   return context;
 };
@@ -32,13 +30,9 @@ interface NotificationProviderProps {
   children: ReactNode;
 }
 
-export const NotificationProvider: React.FC<NotificationProviderProps> = ({
-  children,
-}) => {
+export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children }) => {
   // 患者ID → 通知ID のマッピング
-  const [notificationMap, setNotificationMap] = useState<NotificationMap>(
-    new Map()
-  );
+  const [notificationMap, setNotificationMap] = useState<NotificationMap>(new Map());
   const [hasPermission, setHasPermission] = useState(false);
 
   // 初期化
@@ -59,7 +53,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   const scheduleForPatient = useCallback(
     async (
       patientId: string,
-      patientName: string,
       endTime: Date,
       timingMinutes: number
     ): Promise<string | null> => {
@@ -79,7 +72,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
       const notificationId = await schedulePatientNotification(
         patientId,
-        patientName,
         endTime,
         timingMinutes
       );
@@ -135,9 +127,5 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     isScheduledForPatient,
   };
 
-  return (
-    <NotificationContext.Provider value={value}>
-      {children}
-    </NotificationContext.Provider>
-  );
+  return <NotificationContext.Provider value={value}>{children}</NotificationContext.Provider>;
 };

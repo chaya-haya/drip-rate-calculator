@@ -241,9 +241,7 @@ describe("useCalculation", () => {
         result.current.setHours("1");
       });
 
-      expect(result.current.validationError).toBe(
-        "輸液量は3000 mL以下にしてください"
-      );
+      expect(result.current.validationError).toBe("輸液量は3000 mL以下にしてください");
     });
 
     test("1mLは有効 (下限境界値)", () => {
@@ -291,9 +289,7 @@ describe("useCalculation", () => {
         result.current.setMinutes("14");
       });
 
-      expect(result.current.validationError).toBe(
-        "投与時間は15分以上にしてください"
-      );
+      expect(result.current.validationError).toBe("投与時間は15分以上にしてください");
     });
 
     test("1分はエラー", () => {
@@ -328,9 +324,7 @@ describe("useCalculation", () => {
         result.current.setMinutes("1");
       });
 
-      expect(result.current.validationError).toBe(
-        "投与時間は24時間以下にしてください"
-      );
+      expect(result.current.validationError).toBe("投与時間は24時間以下にしてください");
     });
 
     test("0時間15分の組み合わせで有効", () => {
@@ -381,9 +375,7 @@ describe("useCalculation", () => {
         result.current.setMinutes("39");
       });
 
-      expect(result.current.validationError).toContain(
-        "300滴/分を超えています"
-      );
+      expect(result.current.validationError).toContain("300滴/分を超えています");
     });
 
     test("小児用セットで高速滴下はエラー", () => {
@@ -395,9 +387,7 @@ describe("useCalculation", () => {
         result.current.setHours("1");
       });
 
-      expect(result.current.validationError).toContain(
-        "300滴/分を超えています"
-      );
+      expect(result.current.validationError).toContain("300滴/分を超えています");
     });
 
     test("エラーメッセージに対処方法が含まれる", () => {

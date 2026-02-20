@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
-import { colors, spacing, fontSize } from '../constants/theme';
+import React from "react";
+import { View, Text, TextInput, StyleSheet } from "react-native";
+import { colors, spacing, fontSize } from "../constants/theme";
 
 interface PatientIdentifierProps {
   roomNumber: string;
@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   row: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: spacing.md,
   },
   inputGroup: {

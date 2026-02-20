@@ -1,8 +1,8 @@
-import React from 'react';
-import { View, Animated, StyleSheet } from 'react-native';
-import { useDripAnimation, HAPTIC_INTENSITY } from '../features/calculation/hooks/useDripAnimation';
-import { colors, spacing } from '../constants/theme';
-import type { HapticIntensity } from '../types';
+import React from "react";
+import { View, Animated, StyleSheet } from "react-native";
+import { useDripAnimation, HAPTIC_INTENSITY } from "../features/calculation/hooks/useDripAnimation";
+import { colors, spacing } from "../constants/theme";
+import type { HapticIntensity } from "../types";
 
 interface DripAnimationProps {
   dropInterval: number;
@@ -81,11 +81,11 @@ export const DripAnimation: React.FC<DripAnimationProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: spacing.lg,
   },
   bottle: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   bottleBody: {
     width: 60,
@@ -106,19 +106,19 @@ const styles = StyleSheet.create({
   chamber: {
     width: 50,
     height: 150,
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
     borderWidth: 2,
     borderColor: colors.primary,
     borderRadius: 8,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   chamberInner: {
     flex: 1,
-    alignItems: 'center',
-    position: 'relative',
+    alignItems: "center",
+    position: "relative",
   },
   liquidLevel: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   drop: {
-    position: 'absolute',
+    position: "absolute",
     top: 10,
     width: 16,
     height: 20,

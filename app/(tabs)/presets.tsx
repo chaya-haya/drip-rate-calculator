@@ -1,11 +1,11 @@
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { usePresets } from '../../src/contexts/PresetsContext';
-import { PresetCard } from '../../src/components/PresetCard';
-import { colors, spacing, fontSize } from '../../src/constants/theme';
-import type { Preset } from '../../src/types';
+import React from "react";
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import { usePresets } from "../../src/contexts/PresetsContext";
+import { PresetCard } from "../../src/components/PresetCard";
+import { colors, spacing, fontSize } from "../../src/constants/theme";
+import type { Preset } from "../../src/types";
 
 // プリセット一覧画面
 export default function PresetListScreen() {
@@ -21,22 +21,22 @@ export default function PresetListScreen() {
   };
 
   const handleDelete = (id: string) => {
-    Alert.alert('プリセットの削除', 'このプリセットを削除しますか？', [
-      { text: 'キャンセル', style: 'cancel' },
+    Alert.alert("プリセットの削除", "このプリセットを削除しますか？", [
+      { text: "キャンセル", style: "cancel" },
       {
-        text: '削除',
-        style: 'destructive',
+        text: "削除",
+        style: "destructive",
         onPress: () => deletePreset(id),
       },
     ]);
   };
 
   const handleAdd = () => {
-    router.push('/preset/create');
+    router.push("/preset/create");
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
       <View style={styles.header}>
         <Text style={styles.title}>プリセット</Text>
         <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
@@ -74,9 +74,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     backgroundColor: colors.surface,
@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: fontSize.xlarge,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.text,
   },
   addButton: {
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: colors.textLight,
     fontSize: fontSize.medium,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   list: {
     flex: 1,
@@ -106,18 +106,18 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   emptyContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: spacing.xl * 2,
   },
   emptyText: {
     fontSize: fontSize.medium,
     color: colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
   emptyHint: {
     fontSize: fontSize.small,
     color: colors.textSecondary,
     marginTop: spacing.sm,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

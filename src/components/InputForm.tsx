@@ -1,7 +1,7 @@
-import React, { useCallback } from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
-import { colors, spacing, fontSize } from '../constants/theme';
-import { INPUT_LIMITS } from '../constants/infusionSets';
+import React, { useCallback } from "react";
+import { View, Text, TextInput, StyleSheet } from "react-native";
+import { colors, spacing, fontSize } from "../constants/theme";
+import { INPUT_LIMITS } from "../constants/infusionSets";
 
 interface InputFormProps {
   volume: string;
@@ -26,7 +26,7 @@ export const InputForm: React.FC<InputFormProps> = ({
   const handleHoursChange = useCallback(
     (value: string) => {
       const num = parseInt(value, 10);
-      if (value === '' || (num >= 0 && num <= INPUT_LIMITS.MAX_HOURS)) {
+      if (value === "" || (num >= 0 && num <= INPUT_LIMITS.MAX_HOURS)) {
         onHoursChange(value);
       }
     },
@@ -36,7 +36,7 @@ export const InputForm: React.FC<InputFormProps> = ({
   const handleMinutesChange = useCallback(
     (value: string) => {
       const num = parseInt(value, 10);
-      if (value === '' || (num >= 0 && num <= INPUT_LIMITS.MAX_MINUTES)) {
+      if (value === "" || (num >= 0 && num <= INPUT_LIMITS.MAX_MINUTES)) {
         onMinutesChange(value);
       }
     },
@@ -112,18 +112,18 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.sm,
   },
   timeInputRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: spacing.md,
   },
   timeInput: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.sm,
   },
   input: {
@@ -134,8 +134,8 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     fontSize: fontSize.xlarge,
     backgroundColor: colors.surface,
-    textAlign: 'center',
-    fontWeight: 'bold',
+    textAlign: "center",
+    fontWeight: "bold",
   },
   unit: {
     fontSize: fontSize.large,

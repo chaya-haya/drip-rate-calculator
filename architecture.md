@@ -31,39 +31,52 @@
 
 ```
 pro/
-├── app/                      # Expo Router 画面定義
-│   ├── (tabs)/               # タブナビゲーション
-│   ├── _layout.tsx           # ルートレイアウト
+├── app/                          # Expo Router 画面定義
+│   ├── (tabs)/                   # タブナビゲーション
+│   ├── patient/[id].tsx          # 患者詳細画面
+│   ├── preset/                   # プリセット関連画面
+│   ├── _layout.tsx               # ルートレイアウト
 │   └── ...
-├── components/               # 再利用可能なUIコンポーネント
-│   └── ui/                   # 汎用UIパーツ（ボタン、カード等）
-├── features/                 # 機能単位のモジュール
-│   └── <feature>/
-│       ├── components/       # 機能固有のコンポーネント
-│       ├── hooks/            # 機能固有のカスタムフック
-│       ├── logic.ts          # ビジネスロジック（純粋関数）
-│       └── logic.test.ts     # ロジックのテスト
-├── hooks/                    # アプリ共通のカスタムフック
-├── lib/                      # ユーティリティ・ヘルパー
-│   ├── storage.ts            # AsyncStorageラッパー
-│   └── watchSync.ts          # WatchConnectivity連携（RN側）
-├── types/                    # 共通型定義
-│   └── schema.ts             # iPhone/Watch共有データスキーマ
-├── constants/                # 定数定義
-├── ios/                      # expo prebuild で生成
-│   ├── <AppName>/
-│   └── <AppName>Watch/       # watchOSターゲット
-│       ├── Models/           # 共有データモデル (Swift)
-│       ├── Views/            # SwiftUI画面
-│       ├── Services/         # WatchConnectivity等
-│       └── Assets.xcassets/
-├── shared-schema/            # iPhone/Watch間 共有スキーマ定義
-│   └── DataSchema.swift      # Swiftのデータ型定義（types/schema.tsと対応）
-├── app.config.ts             # Expo設定
+├── src/
+│   ├── components/               # 再利用可能なUIコンポーネント（フラット構成）
+│   ├── contexts/                 # React Context（状態管理）
+│   ├── features/                 # 機能単位のモジュール
+│   │   └── <feature>/
+│   │       ├── hooks/            # 機能固有のカスタムフック
+│   │       ├── logic.ts          # ビジネスロジック（純粋関数）
+│   │       └── logic.test.ts     # ロジックのテスト
+│   ├── hooks/                    # アプリ共通のカスタムフック
+│   ├── lib/                      # ユーティリティ・ヘルパー
+│   │   ├── storage.ts            # AsyncStorageラッパー
+│   │   ├── notification.ts       # 通知ユーティリティ
+│   │   └── logger.ts             # ログユーティリティ
+│   ├── types/                    # 共通型定義
+│   │   ├── patient.ts            # 患者データ型
+│   │   ├── infusion.ts           # 点滴・計算関連型
+│   │   ├── preset.ts             # プリセット型
+│   │   ├── context.ts            # Context用型
+│   │   ├── hooks.ts              # フック用型
+│   │   └── ...
+│   └── constants/                # 定数定義
+├── modules/
+│   └── watch-connectivity/       # Expo Native Module（iPhone⇄Watch通信）
+│       ├── index.ts              # JS API
+│       ├── src/                  # TypeScript型定義
+│       └── ios/                  # Swift実装
+├── targets/
+│   └── watch/                    # watchOSターゲット (@bacons/apple-targets)
+│       ├── src/
+│       │   ├── Models/           # データモデル (Swift)
+│       │   ├── Views/            # SwiftUI画面
+│       │   ├── ViewModels/       # 状態管理（WatchConnectivityManager等）
+│       │   └── Utilities/        # ヘルパー（HapticManager等）
+│       └── Info.plist
+├── ios/                          # expo prebuild で生成（git管理外）
+├── app.config.ts                 # Expo設定
 ├── tsconfig.json
 ├── package.json
-├── CLAUDE.md                 # コーディング規約・審査ルール
-└── architecture.md           # 本ドキュメント
+├── CLAUDE.md                     # コーディング規約・審査ルール
+└── architecture.md               # 本ドキュメント
 ```
 
 ## レイヤー構成（iPhone App）
@@ -91,12 +104,13 @@ pro/
 ```
 ┌─────────────────────────────┐
 │  Views/                     │  SwiftUI画面（1画面1機能）
+│    └── Components/          │  再利用可能なサブビュー
 ├─────────────────────────────┤
-│  ViewModels/ (任意)         │  画面の状態管理
+│  ViewModels/                │  画面の状態管理・WatchConnectivity通信
 ├─────────────────────────────┤
-│  Models/                    │  データモデル（shared-schemaと同期）
+│  Models/                    │  データモデル（TypeScript側と手動同期）
 ├─────────────────────────────┤
-│  Services/                  │  WatchConnectivity, UserDefaults
+│  Utilities/                 │  ヘルパー（HapticManager等）
 └─────────────────────────────┘
 ```
 
@@ -116,21 +130,23 @@ pro/
 ### iPhone ⇄ Apple Watch 同期
 
 ```
-iPhone                          Apple Watch
-──────                          ───────────
-lib/watchSync.ts                Services/WatchService.swift
-  │                                │
-  │  WatchConnectivity             │
-  │  (sendMessage /                │
-  │   transferUserInfo /           │
-  │   updateApplicationContext)    │
-  │◄──────────────────────────────►│
-  │                                │
-AsyncStorage                    UserDefaults
-(ローカル保存)                   (ローカルキャッシュ)
+iPhone                              Apple Watch
+──────                              ───────────
+modules/watch-connectivity/         ViewModels/
+  (Expo Native Module)              WatchConnectivityManager.swift
+  │                                    │
+  │  WatchConnectivity                 │
+  │  (sendMessage /                    │
+  │   transferUserInfo /               │
+  │   updateApplicationContext)        │
+  │◄──────────────────────────────────►│
+  │                                    │
+AsyncStorage                        UserDefaults
+(ローカル保存)                       (ローカルキャッシュ)
 ```
 
 **同期方針**:
+
 - `updateApplicationContext`: 最新状態の共有（アプリ起動時に最新を取得）
 - `sendMessage`: リアルタイム通信（両方がアクティブな場合）
 - `transferUserInfo`: キュー方式（確実に届けたいデータ）
@@ -138,22 +154,23 @@ AsyncStorage                    UserDefaults
 ### 共有スキーマの管理
 
 ```
-types/schema.ts (TypeScript)  ←── 信頼できる唯一の情報源 (SSOT)
-        │
-        │  手動同期（型の対応を維持）
-        ▼
-shared-schema/DataSchema.swift (Swift)
+src/types/ (TypeScript)           targets/watch/src/Models/ (Swift)
+  patient.ts                        WatchPatient.swift
+  infusion.ts                       InfusionCalculator.swift
+        │                                  │
+        └──── 手動同期（型の対応を維持）────┘
 ```
 
-型の不整合を防ぐため、スキーマ変更時は両ファイルを必ず同時に更新する。
+型定義はTypeScript側（`src/types/`）とSwift側（`targets/watch/src/Models/`）にそれぞれ配置されている。
+一元管理（SSOT）の仕組みは未導入のため、スキーマ変更時は両方のファイルを手動で同時に更新する。
 
 ## ストレージ設計
 
-| プラットフォーム | 技術 | 用途 |
-|---|---|---|
-| iPhone | AsyncStorage | アプリデータの永続化 |
-| Apple Watch | UserDefaults | Watchローカルキャッシュ |
-| 共通 | WatchConnectivity | デバイス間データ同期 |
+| プラットフォーム | 技術              | 用途                    |
+| ---------------- | ----------------- | ----------------------- |
+| iPhone           | AsyncStorage      | アプリデータの永続化    |
+| Apple Watch      | UserDefaults      | Watchローカルキャッシュ |
+| 共通             | WatchConnectivity | デバイス間データ同期    |
 
 - 外部サーバー・クラウドDBは使用しない
 - すべてのデータはデバイスローカルに保存する
@@ -166,10 +183,8 @@ shared-schema/DataSchema.swift (Swift)
 
 2. ネイティブプロジェクト生成
    expo prebuild → ios/ ディレクトリ生成
+   ※ @bacons/apple-targets により targets/watch/ が自動統合される
 
-3. watchOSターゲット追加
-   Xcodeで ios/<AppName>Watch/ ターゲットを追加・実装
-
-4. ビルド・提出
+3. ビルド・提出
    EAS Build または Xcode Archive → App Store Connect
 ```

@@ -1,8 +1,4 @@
-import type {
-  InfusionSet,
-  NotificationTimingOption,
-  PatientStatusConfig,
-} from "./infusion";
+import type { InfusionSet, NotificationTimingOption, PatientStatusConfig } from "./infusion";
 import type { HapticIntensity } from "./hooks";
 
 // 患者データ（AsyncStorageに保存）
@@ -32,9 +28,7 @@ export interface PatientWithStatus extends Patient {
 }
 
 // 新規患者作成用
-export type PatientCreateData = Partial<
-  Omit<Patient, "id" | "createdAt" | "updatedAt">
->;
+export type PatientCreateData = Partial<Omit<Patient, "id" | "createdAt" | "updatedAt">>;
 
 // 患者更新用
 export type PatientUpdateData = Partial<Omit<Patient, "id" | "createdAt">>;

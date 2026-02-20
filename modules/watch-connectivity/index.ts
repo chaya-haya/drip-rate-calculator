@@ -7,11 +7,11 @@ export {
   transferUserInfo,
   addMessageListener,
   removeMessageListener,
-} from './src/WatchConnectivityModule';
+} from "./src/WatchConnectivityModule";
 
 export type {
   WatchMessage,
   WatchCommand,
   WatchPatientData,
   WatchSyncPayload,
-} from './src/WatchConnectivityModule.types';
+} from "./src/WatchConnectivityModule.types";

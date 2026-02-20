@@ -25,9 +25,7 @@ interface PresetsProviderProps {
   children: ReactNode;
 }
 
-export const PresetsProvider: React.FC<PresetsProviderProps> = ({
-  children,
-}) => {
+export const PresetsProvider: React.FC<PresetsProviderProps> = ({ children }) => {
   const [presets, setPresets] = useState<Preset[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -69,9 +67,7 @@ export const PresetsProvider: React.FC<PresetsProviderProps> = ({
   const updatePreset = useCallback(
     async (id: string, updates: PresetUpdateData): Promise<void> => {
       const updatedPresets = presets.map((preset) =>
-        preset.id === id
-          ? { ...preset, ...updates, updatedAt: new Date().toISOString() }
-          : preset
+        preset.id === id ? { ...preset, ...updates, updatedAt: new Date().toISOString() } : preset
       );
       setPresets(updatedPresets);
       await savePresets(updatedPresets);
@@ -106,7 +102,5 @@ export const PresetsProvider: React.FC<PresetsProviderProps> = ({
     getPreset,
   };
 
-  return (
-    <PresetsContext.Provider value={value}>{children}</PresetsContext.Provider>
-  );
+  return <PresetsContext.Provider value={value}>{children}</PresetsContext.Provider>;
 };

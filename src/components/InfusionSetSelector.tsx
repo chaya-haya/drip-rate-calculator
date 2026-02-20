@@ -1,8 +1,8 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { INFUSION_SET_LIST } from '../constants/infusionSets';
-import { colors, spacing, fontSize } from '../constants/theme';
-import type { InfusionSet } from '../types';
+import React from "react";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { INFUSION_SET_LIST } from "../constants/infusionSets";
+import { colors, spacing, fontSize } from "../constants/theme";
+import type { InfusionSet } from "../types";
 
 interface InfusionSetSelectorProps {
   selectedSet: InfusionSet;
@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   buttonGroup: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: spacing.sm,
   },
   button: {
@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: 12,
     padding: spacing.md,
-    alignItems: 'center',
+    alignItems: "center",
   },
   buttonSelected: {
     borderColor: colors.primary,
@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: fontSize.large,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.text,
   },
   buttonTextSelected: {

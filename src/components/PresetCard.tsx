@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { colors, spacing, fontSize } from '../constants/theme';
-import type { Preset } from '../types';
+import React from "react";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { colors, spacing, fontSize } from "../constants/theme";
+import type { Preset } from "../types";
 
 interface PresetCardProps {
   preset: Preset;
@@ -12,7 +12,7 @@ interface PresetCardProps {
 
 // プリセットカードコンポーネント
 export const PresetCard: React.FC<PresetCardProps> = ({ preset, onSelect, onEdit, onDelete }) => {
-  const infusionSetName = preset.infusionSet?.name || '成人用';
+  const infusionSetName = preset.infusionSet?.name || "成人用";
   const timeText = `${preset.hours || 0}時間${preset.minutes || 0}分`;
 
   return (
@@ -56,21 +56,21 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: spacing.md,
     marginBottom: spacing.sm,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: spacing.xs,
   },
   name: {
     fontSize: fontSize.medium,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.text,
     flex: 1,
   },
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   actions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: spacing.sm,
   },
   selectButton: {
@@ -95,12 +95,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     borderRadius: 8,
     padding: spacing.sm,
-    alignItems: 'center',
+    alignItems: "center",
   },
   selectButtonText: {
     color: colors.textLight,
     fontSize: fontSize.small,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   deleteButton: {
     backgroundColor: colors.surface,

@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { StatusBadge } from './StatusBadge';
-import { colors, spacing, fontSize } from '../constants/theme';
-import { formatTime } from '../features/calculation/logic';
-import type { PatientWithStatus } from '../types';
+import React, { useState, useEffect } from "react";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { StatusBadge } from "./StatusBadge";
+import { colors, spacing, fontSize } from "../constants/theme";
+import { formatTime } from "../features/calculation/logic";
+import type { PatientWithStatus } from "../types";
 
 // 残り時間をフォーマット
 const formatRemainingTime = (remainingMs: number | null): string | null => {
@@ -15,9 +15,9 @@ const formatRemainingTime = (remainingMs: number | null): string | null => {
   const seconds = totalSeconds % 60;
 
   if (hours > 0) {
-    return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    return `${hours}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
   }
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 };
 
 interface PatientCardProps {
@@ -27,7 +27,9 @@ interface PatientCardProps {
 
 // 患者カードコンポーネント
 export const PatientCard: React.FC<PatientCardProps> = ({ patient, onPress }) => {
-  const [localRemainingTime, setLocalRemainingTime] = useState<number | null>(patient.remainingTime);
+  const [localRemainingTime, setLocalRemainingTime] = useState<number | null>(
+    patient.remainingTime
+  );
 
   // 投与中の患者のリアルタイムカウントダウン
   useEffect(() => {
@@ -52,8 +54,8 @@ export const PatientCard: React.FC<PatientCardProps> = ({ patient, onPress }) =>
 
   const patientName =
     patient.roomNumber || patient.bedNumber
-      ? `${patient.roomNumber || '---'}号室 ${patient.bedNumber || '-'}番ベッド`
-      : '新規患者';
+      ? `${patient.roomNumber || "---"}号室 ${patient.bedNumber || "-"}番ベッド`
+      : "新規患者";
 
   const remainingText = formatRemainingTime(localRemainingTime);
   const endTimeText = patient.endTime ? formatTime(new Date(patient.endTime)) : null;
@@ -70,15 +72,15 @@ export const PatientCard: React.FC<PatientCardProps> = ({ patient, onPress }) =>
       <View style={styles.details}>
         {patient.isRunning ? (
           <>
-            <Text style={styles.remaining}>残り {remainingText || '--:--'}</Text>
+            <Text style={styles.remaining}>残り {remainingText || "--:--"}</Text>
             {endTimeText && <Text style={styles.endTime}>終了予定 {endTimeText}</Text>}
           </>
         ) : (
           <Text style={styles.info}>
-            {patient.volume ? `${patient.volume}mL` : '未設定'}
+            {patient.volume ? `${patient.volume}mL` : "未設定"}
             {patient.hours || patient.minutes
               ? ` / ${patient.hours || 0}時間${patient.minutes || 0}分`
-              : ''}
+              : ""}
           </Text>
         )}
       </View>
@@ -92,33 +94,33 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: spacing.md,
     marginBottom: spacing.sm,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: spacing.sm,
   },
   name: {
     fontSize: fontSize.medium,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.text,
     flex: 1,
     marginRight: spacing.sm,
   },
   details: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   remaining: {
     fontSize: fontSize.large,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.primary,
   },
   endTime: {

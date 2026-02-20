@@ -24,10 +24,7 @@ export const calculateDropInterval = (dropsPerMinute: number): number => {
 };
 
 // 総滴下数を計算
-export const calculateTotalDrops = (
-  volumeMl: number,
-  dropsPerMl: number
-): number => {
+export const calculateTotalDrops = (volumeMl: number, dropsPerMl: number): number => {
   return volumeMl * dropsPerMl;
 };
 
