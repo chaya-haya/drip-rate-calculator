@@ -38,6 +38,12 @@ struct PatientListView: View {
               .font(.caption2)
           }
         }
+        ToolbarItem(placement: .bottomBar) {
+          NavigationLink(destination: NumericMemoView()) {
+            Label("メモ", systemImage: "square.and.pencil")
+              .font(.caption2)
+          }
+        }
       }
     }
   }
