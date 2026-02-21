@@ -302,6 +302,9 @@ export default function PatientDetailScreen() {
   if (!patient) {
     return (
       <SafeAreaView style={styles.container}>
+        <TouchableOpacity style={styles.errorBackButton} onPress={() => router.back()}>
+          <Text style={styles.backText}>← 戻る</Text>
+        </TouchableOpacity>
         <Text style={styles.errorText}>患者が見つかりません</Text>
       </SafeAreaView>
     );
@@ -583,6 +586,9 @@ const styles = StyleSheet.create({
     color: colors.error,
     textAlign: "center",
     marginTop: spacing.xl,
+  },
+  errorBackButton: {
+    padding: spacing.md,
   },
   validationErrorContainer: {
     backgroundColor: "#FFF3E0",

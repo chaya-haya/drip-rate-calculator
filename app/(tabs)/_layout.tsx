@@ -7,11 +7,18 @@ interface TabIconProps {
   focused: boolean;
 }
 
+// ラベルとアイコン絵文字の対応
+const TAB_ICONS: Record<string, string> = {
+  "患者一覧": "👥",
+  "プリセット": "⭐",
+  "設定": "⚙️",
+};
+
 // シンプルなタブアイコン
 const TabIcon: React.FC<TabIconProps> = ({ label, focused }) => (
   <View style={styles.iconContainer}>
     <Text style={[styles.icon, focused && styles.iconFocused]}>
-      {label === "患者一覧" ? "👥" : "⭐"}
+      {TAB_ICONS[label] ?? "•"}
     </Text>
   </View>
 );
@@ -40,6 +47,13 @@ export default function TabLayout() {
         options={{
           tabBarLabel: "プリセット",
           tabBarIcon: ({ focused }) => <TabIcon label="プリセット" focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          tabBarLabel: "設定",
+          tabBarIcon: ({ focused }) => <TabIcon label="設定" focused={focused} />,
         }}
       />
     </Tabs>

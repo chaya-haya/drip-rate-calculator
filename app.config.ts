@@ -39,6 +39,21 @@ export default ({ config }: ConfigContext): ExpoConfig => {
             NSPrivacyAccessedAPIType: "NSPrivacyAccessedAPICategoryUserDefaults",
             NSPrivacyAccessedAPITypeReasons: ["CA92.1"],
           },
+          // ファイルタイムスタンプへのアクセス（依存ライブラリが使用）
+          {
+            NSPrivacyAccessedAPIType: "NSPrivacyAccessedAPICategoryFileTimestamp",
+            NSPrivacyAccessedAPITypeReasons: ["C617.1"],
+          },
+          // システム起動時刻へのアクセス（依存ライブラリが使用）
+          {
+            NSPrivacyAccessedAPIType: "NSPrivacyAccessedAPICategorySystemBootTime",
+            NSPrivacyAccessedAPITypeReasons: ["35F9.1"],
+          },
+          // ディスク空き容量へのアクセス（依存ライブラリが使用）
+          {
+            NSPrivacyAccessedAPIType: "NSPrivacyAccessedAPICategoryDiskSpace",
+            NSPrivacyAccessedAPITypeReasons: ["E174.1"],
+          },
         ],
       },
     },
