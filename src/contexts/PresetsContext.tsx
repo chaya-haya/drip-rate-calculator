@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import * as Crypto from "expo-crypto";
 import { savePresets, loadPresets } from "../lib/storage";
+import { createPreset, updatePresetData } from "../features/presets/logic";
 import type { Preset, PresetCreateData, PresetUpdateData } from "../types";
 import type { PresetsContextValue } from "../types/context";
 
@@ -44,16 +45,11 @@ export const PresetsProvider: React.FC<PresetsProviderProps> = ({ children }) =>
   // プリセットを追加
   const addPreset = useCallback(
     async (presetData: PresetCreateData): Promise<Preset> => {
-      const newPreset: Preset = {
-        id: Crypto.randomUUID(),
-        name: presetData.name,
-        infusionSet: presetData.infusionSet,
-        volume: presetData.volume,
-        hours: presetData.hours,
-        minutes: presetData.minutes,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
+      const newPreset = createPreset(
+        Crypto.randomUUID(),
+        presetData,
+        new Date().toISOString()
+      );
 
       const updatedPresets = [...presets, newPreset];
       setPresets(updatedPresets);
@@ -66,8 +62,9 @@ export const PresetsProvider: React.FC<PresetsProviderProps> = ({ children }) =>
   // プリセットを更新
   const updatePreset = useCallback(
     async (id: string, updates: PresetUpdateData): Promise<void> => {
+      const now = new Date().toISOString();
       const updatedPresets = presets.map((preset) =>
-        preset.id === id ? { ...preset, ...updates, updatedAt: new Date().toISOString() } : preset
+        preset.id === id ? updatePresetData(preset, updates, now) : preset
       );
       setPresets(updatedPresets);
       await savePresets(updatedPresets);

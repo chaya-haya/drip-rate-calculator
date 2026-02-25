@@ -23,6 +23,14 @@ export default function SettingsScreen() {
           <Text style={styles.rowLabel}>免責事項</Text>
           <Text style={styles.rowArrow}>›</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.row}
+          onPress={() => router.push("/settings/privacy-policy")}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.rowLabel}>プライバシーポリシー</Text>
+          <Text style={styles.rowArrow}>›</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );

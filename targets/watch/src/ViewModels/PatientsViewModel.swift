@@ -39,14 +39,15 @@ class PatientsViewModel: ObservableObject {
 
   /// iPhoneに開始コマンドを送信
   func startInfusion(patientId: String) {
-    connectivity.sendStartCommand(patientId: patientId)
+    guard let index = patients.firstIndex(where: { $0.id == patientId }) else { return }
+    let totalMinutes = patients[index].totalMinutes
+    // Watch側でendTimeを計算してコマンドに乗せる（iPhone側の再計算による時刻ズレを防ぐ）
+    let endTime = Date().addingTimeInterval(totalMinutes * 60)
+    connectivity.sendStartCommand(patientId: patientId, endTime: endTime)
     // 楽観的ローカル更新
-    if let index = patients.firstIndex(where: { $0.id == patientId }) {
-      let totalMinutes = patients[index].totalMinutes
-      patients[index].isRunning = true
-      patients[index].startedAt = Date()
-      patients[index].endTime = Date().addingTimeInterval(totalMinutes * 60)
-    }
+    patients[index].isRunning = true
+    patients[index].startedAt = Date()
+    patients[index].endTime = endTime
   }
 
   /// iPhoneに停止コマンドを送信

@@ -25,11 +25,15 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
   // MARK: - iPhoneへのコマンド送信
 
   /// 投与開始コマンド送信
-  func sendStartCommand(patientId: String) {
+  /// Watch側で計算したendTimeをiPhoneに渡すことで、通信遅延による時刻ズレを防ぐ
+  func sendStartCommand(patientId: String, endTime: Date) {
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]  // 小数秒を含めてiPhoneとの時刻ズレを防ぐ
     let message: [String: Any] = [
       "type": "startInfusion",
       "patientId": patientId,
       "timestamp": Date().timeIntervalSince1970,
+      "endTime": formatter.string(from: endTime),
     ]
     sendCommandMessage(message)
   }

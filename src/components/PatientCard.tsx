@@ -9,7 +9,7 @@ import type { PatientWithStatus } from "../types";
 const formatRemainingTime = (remainingMs: number | null): string | null => {
   if (!remainingMs || remainingMs <= 0) return null;
 
-  const totalSeconds = Math.floor(remainingMs / 1000);
+  const totalSeconds = Math.ceil(remainingMs / 1000);
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
@@ -38,18 +38,28 @@ export const PatientCard: React.FC<PatientCardProps> = ({ patient, onPress }) =>
       return;
     }
 
-    const updateRemainingTime = () => {
-      const now = new Date();
-      const endTime = new Date(patient.endTime!);
-      const remainingMs = Math.max(0, endTime.getTime() - now.getTime());
-      setLocalRemainingTime(remainingMs);
+    const endTime = new Date(patient.endTime!);
+
+    // 自己調整タイマー: 毎ティックごとに現在時刻から次の秒境界を再計算して予約する
+    // → setInterval の誤差蓄積を防ぎ、Watch の Text(timerInterval:countsDown:true) と同期する
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    const tick = () => {
+      const remaining = Math.max(0, endTime.getTime() - Date.now());
+      setLocalRemainingTime(remaining);
+
+      if (remaining <= 0) return;
+
+      // 次の秒境界ちょうどに発火: remaining が N*1000ms になり ceil で N に切り替わる
+      const msUntilNext = remaining % 1000 || 1000;
+      timeoutId = setTimeout(tick, msUntilNext);
     };
 
-    updateRemainingTime();
+    tick();
 
-    const interval = setInterval(updateRemainingTime, 1000);
-
-    return () => clearInterval(interval);
+    return () => {
+      if (timeoutId !== null) clearTimeout(timeoutId);
+    };
   }, [patient.isRunning, patient.endTime]);
 
   const patientName =

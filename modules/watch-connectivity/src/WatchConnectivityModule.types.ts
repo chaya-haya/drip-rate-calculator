@@ -26,6 +26,7 @@ export interface WatchCommand {
   type: "startInfusion" | "stopInfusion" | "requestSync";
   patientId: string;
   timestamp: number;
+  endTime?: string; // ISO 8601（startInfusion時のみ）Watch側計算値を優先使用
 }
 
 // メッセージ型

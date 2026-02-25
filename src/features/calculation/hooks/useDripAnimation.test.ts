@@ -85,7 +85,7 @@ describe("useDripAnimation", () => {
 
     test("非アクティブに切り替えるとisAnimatingがfalseになる", () => {
       const { result, rerender } = renderHook(
-        ({ interval, active }) => useDripAnimation(interval, active),
+        ({ interval, active }: { interval: number; active: boolean }) => useDripAnimation(interval, active),
         { initialProps: { interval: 1000, active: true } }
       );
 

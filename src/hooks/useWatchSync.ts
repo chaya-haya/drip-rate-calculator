@@ -132,7 +132,10 @@ export const useWatchSync = ({
           const minutesNum = parseInt(patient.minutes, 10) || 0;
           const totalMinutes = hoursToMinutes(hoursNum, minutesNum);
           if (volumeNum > 0 && totalMinutes > 0) {
-            const endTime = new Date(Date.now() + totalMinutes * 60 * 1000);
+            // Watch側が計算したendTimeがあればそれを優先し、通信遅延による再計算ズレを防ぐ
+            const endTime = command.endTime
+              ? new Date(command.endTime)
+              : new Date(Date.now() + totalMinutes * 60 * 1000);
             await startPatient(command.patientId, endTime);
           }
           break;

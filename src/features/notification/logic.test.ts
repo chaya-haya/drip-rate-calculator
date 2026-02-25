@@ -5,7 +5,7 @@ import {
   cancelNotification,
   cancelAllNotifications,
   getScheduledNotifications,
-} from "./notification";
+} from "./logic";
 
 jest.mock("expo-notifications", () => ({
   setNotificationHandler: jest.fn(),
