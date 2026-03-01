@@ -2,6 +2,7 @@ import React from "react";
 import { renderHook, act, waitFor } from "@testing-library/react-native";
 import { NotificationProvider, useNotifications } from "./NotificationContext";
 import {
+  getNotificationPermissionStatus,
   requestNotificationPermission,
   schedulePatientNotification,
   cancelNotification,
@@ -10,6 +11,7 @@ import {
 import { saveNotificationMap, loadNotificationMap } from "../lib/storage";
 
 jest.mock("../lib/notification", () => ({
+  getNotificationPermissionStatus: jest.fn().mockResolvedValue(false),
   requestNotificationPermission: jest.fn().mockResolvedValue(true),
   schedulePatientNotification: jest.fn().mockResolvedValue("notif-123"),
   cancelNotification: jest.fn().mockResolvedValue(undefined),
@@ -27,6 +29,7 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 
 beforeEach(() => {
   jest.clearAllMocks();
+  (getNotificationPermissionStatus as jest.Mock).mockResolvedValue(false);
   (requestNotificationPermission as jest.Mock).mockResolvedValue(true);
   (loadNotificationMap as jest.Mock).mockResolvedValue({
     success: true,
@@ -49,12 +52,14 @@ describe("NotificationContext", () => {
   });
 
   describe("初期化", () => {
-    test("マウント時に権限をリクエスト", async () => {
+    test("マウント時は権限状態のみ確認し、許可ダイアログは出さない", async () => {
       renderHook(() => useNotifications(), { wrapper });
 
       await waitFor(() => {
-        expect(requestNotificationPermission).toHaveBeenCalled();
+        expect(getNotificationPermissionStatus).toHaveBeenCalled();
       });
+
+      expect(requestNotificationPermission).not.toHaveBeenCalled();
     });
 
     test("ストレージから通知マップを読み込む", async () => {
@@ -66,6 +71,7 @@ describe("NotificationContext", () => {
     });
 
     test("権限結果に応じてhasPermissionが設定される", async () => {
+      (getNotificationPermissionStatus as jest.Mock).mockResolvedValue(true);
       const { result } = renderHook(() => useNotifications(), { wrapper });
 
       await waitFor(() => {
@@ -74,7 +80,7 @@ describe("NotificationContext", () => {
     });
 
     test("権限拒否時はhasPermissionがfalse", async () => {
-      (requestNotificationPermission as jest.Mock).mockResolvedValue(false);
+      (getNotificationPermissionStatus as jest.Mock).mockResolvedValue(false);
 
       const { result } = renderHook(() => useNotifications(), { wrapper });
 
@@ -85,11 +91,11 @@ describe("NotificationContext", () => {
   });
 
   describe("scheduleForPatient", () => {
-    test("通知をスケジュールしてマッピングを保存", async () => {
+    test("権限なしでは許可ダイアログを出さず、通知をスケジュールしない", async () => {
       const { result } = renderHook(() => useNotifications(), { wrapper });
 
       await waitFor(() => {
-        expect(result.current.hasPermission).toBe(true);
+        expect(loadNotificationMap).toHaveBeenCalled();
       });
 
       const endTime = new Date("2024-01-15T12:00:00");
@@ -99,7 +105,31 @@ describe("NotificationContext", () => {
         notifId = await result.current.scheduleForPatient("patient-1", endTime, 5);
       });
 
+      expect(notifId!).toBeNull();
+      expect(requestNotificationPermission).not.toHaveBeenCalled();
+      expect(schedulePatientNotification).not.toHaveBeenCalled();
+      expect(saveNotificationMap).not.toHaveBeenCalled();
+      expect(result.current.isScheduledForPatient("patient-1")).toBe(false);
+    });
+
+    test("明示的に許可要求した場合は通知をスケジュールしてマッピングを保存", async () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+
+      await waitFor(() => {
+        expect(loadNotificationMap).toHaveBeenCalled();
+      });
+
+      const endTime = new Date("2024-01-15T12:00:00");
+      let notifId: string | null;
+
+      await act(async () => {
+        notifId = await result.current.scheduleForPatient("patient-1", endTime, 5, {
+          requestPermission: true,
+        });
+      });
+
       expect(notifId!).toBe("notif-123");
+      expect(requestNotificationPermission).toHaveBeenCalled();
       expect(schedulePatientNotification).toHaveBeenCalledWith("patient-1", endTime, 5);
       expect(saveNotificationMap).toHaveBeenCalled();
       expect(result.current.isScheduledForPatient("patient-1")).toBe(true);
@@ -114,7 +144,7 @@ describe("NotificationContext", () => {
       const { result } = renderHook(() => useNotifications(), { wrapper });
 
       await waitFor(() => {
-        expect(result.current.hasPermission).toBe(true);
+        expect(result.current.isScheduledForPatient("patient-1")).toBe(true);
       });
 
       const endTime = new Date("2024-01-15T12:00:00");
@@ -123,6 +153,25 @@ describe("NotificationContext", () => {
       });
 
       expect(cancelNotification).toHaveBeenCalledWith("old-notif");
+    });
+  });
+
+  describe("ensurePermission", () => {
+    test("未許可時に許可ダイアログを表示して結果を返す", async () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+
+      await waitFor(() => {
+        expect(loadNotificationMap).toHaveBeenCalled();
+      });
+
+      let granted = false;
+      await act(async () => {
+        granted = await result.current.ensurePermission();
+      });
+
+      expect(granted).toBe(true);
+      expect(requestNotificationPermission).toHaveBeenCalled();
+      expect(result.current.hasPermission).toBe(true);
     });
   });
 
@@ -152,7 +201,7 @@ describe("NotificationContext", () => {
       const { result } = renderHook(() => useNotifications(), { wrapper });
 
       await waitFor(() => {
-        expect(result.current.hasPermission).toBe(true);
+        expect(loadNotificationMap).toHaveBeenCalled();
       });
 
       await act(async () => {
@@ -176,7 +225,7 @@ describe("NotificationContext", () => {
       const { result } = renderHook(() => useNotifications(), { wrapper });
 
       await waitFor(() => {
-        expect(result.current.hasPermission).toBe(true);
+        expect(result.current.isScheduledForPatient("patient-1")).toBe(true);
       });
 
       await act(async () => {
@@ -184,7 +233,9 @@ describe("NotificationContext", () => {
       });
 
       expect(cancelAllNotifications).toHaveBeenCalled();
-      expect(result.current.isScheduledForPatient("patient-1")).toBe(false);
+      await waitFor(() => {
+        expect(result.current.isScheduledForPatient("patient-1")).toBe(false);
+      });
       expect(result.current.isScheduledForPatient("patient-2")).toBe(false);
       expect(saveNotificationMap).toHaveBeenCalled();
     });
@@ -208,7 +259,7 @@ describe("NotificationContext", () => {
       const { result } = renderHook(() => useNotifications(), { wrapper });
 
       await waitFor(() => {
-        expect(result.current.hasPermission).toBe(true);
+        expect(loadNotificationMap).toHaveBeenCalled();
       });
 
       expect(result.current.isScheduledForPatient("no-notif")).toBe(false);

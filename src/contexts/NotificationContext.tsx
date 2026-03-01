@@ -7,6 +7,7 @@ import React, {
   ReactNode,
 } from "react";
 import {
+  getNotificationPermissionStatus,
   requestNotificationPermission,
   schedulePatientNotification,
   cancelNotification,
@@ -38,7 +39,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   // 初期化
   useEffect(() => {
     const init = async () => {
-      const permission = await requestNotificationPermission();
+      const permission = await getNotificationPermissionStatus();
       setHasPermission(permission);
 
       const result = await loadNotificationMap();
@@ -49,12 +50,23 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     init();
   }, []);
 
+  const ensurePermission = useCallback(async (): Promise<boolean> => {
+    if (hasPermission) {
+      return true;
+    }
+
+    const granted = await requestNotificationPermission();
+    setHasPermission(granted);
+    return granted;
+  }, [hasPermission]);
+
   // 患者の通知をスケジュール
   const scheduleForPatient = useCallback(
     async (
       patientId: string,
       endTime: Date,
-      timingMinutes: number
+      timingMinutes: number,
+      options?: { requestPermission?: boolean }
     ): Promise<string | null> => {
       // 既存の通知をキャンセル
       const existingId = notificationMap.get(patientId);
@@ -63,18 +75,13 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       }
 
       if (!hasPermission) {
-        const granted = await requestNotificationPermission();
-        setHasPermission(granted);
+        const granted = options?.requestPermission ? await ensurePermission() : false;
         if (!granted) {
           return null;
         }
       }
 
-      const notificationId = await schedulePatientNotification(
-        patientId,
-        endTime,
-        timingMinutes
-      );
+      const notificationId = await schedulePatientNotification(patientId, endTime, timingMinutes);
 
       if (notificationId) {
         const newMap = new Map(notificationMap);
@@ -85,7 +92,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
       return notificationId;
     },
-    [notificationMap, hasPermission]
+    [notificationMap, hasPermission, ensurePermission]
   );
 
   // 患者の通知をキャンセル
@@ -121,6 +128,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
   const value: NotificationContextValue = {
     hasPermission,
+    ensurePermission,
     scheduleForPatient,
     cancelForPatient,
     cancelAll,

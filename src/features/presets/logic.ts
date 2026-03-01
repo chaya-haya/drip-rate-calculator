@@ -13,7 +13,11 @@ export const createPreset = (id: string, data: PresetCreateData, now: string): P
 });
 
 // 既存プリセットに更新を適用
-export const updatePresetData = (preset: Preset, updates: PresetUpdateData, now: string): Preset => ({
+export const updatePresetData = (
+  preset: Preset,
+  updates: PresetUpdateData,
+  now: string
+): Preset => ({
   ...preset,
   ...updates,
   updatedAt: now,

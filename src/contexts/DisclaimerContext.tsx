@@ -7,6 +7,8 @@ interface DisclaimerContextValue {
   isAccepted: boolean;
   // 同意ボタン押下時に呼ぶ
   accept: () => Promise<void>;
+  // 同意状態をリセットして免責事項を再表示する
+  resetAcceptance: () => void;
   // AsyncStorage の読み込みが完了したか
   isLoaded: boolean;
 }
@@ -40,12 +42,22 @@ export const DisclaimerProvider: React.FC<DisclaimerProviderProps> = ({ children
 
   // 同意を記録する
   const accept = async () => {
-    await AsyncStorage.setItem(STORAGE_KEYS.DISCLAIMER_ACCEPTED, "true");
-    setIsAccepted(true);
+    try {
+      await AsyncStorage.setItem(STORAGE_KEYS.DISCLAIMER_ACCEPTED, "true");
+      setIsAccepted(true);
+    } catch {
+      setIsAccepted(false);
+    }
+  };
+
+  // 同意状態をリセットして免責事項モーダルを再表示する
+  const resetAcceptance = () => {
+    setIsAccepted(false);
+    void AsyncStorage.removeItem(STORAGE_KEYS.DISCLAIMER_ACCEPTED);
   };
 
   return (
-    <DisclaimerContext.Provider value={{ isAccepted, accept, isLoaded }}>
+    <DisclaimerContext.Provider value={{ isAccepted, accept, resetAcceptance, isLoaded }}>
       {children}
     </DisclaimerContext.Provider>
   );

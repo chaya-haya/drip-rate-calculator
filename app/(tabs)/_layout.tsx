@@ -9,17 +9,15 @@ interface TabIconProps {
 
 // ラベルとアイコン絵文字の対応
 const TAB_ICONS: Record<string, string> = {
-  "患者一覧": "👥",
-  "プリセット": "⭐",
-  "設定": "⚙️",
+  患者一覧: "👥",
+  プリセット: "⭐",
+  設定: "⚙️",
 };
 
 // シンプルなタブアイコン
 const TabIcon: React.FC<TabIconProps> = ({ label, focused }) => (
   <View style={styles.iconContainer}>
-    <Text style={[styles.icon, focused && styles.iconFocused]}>
-      {TAB_ICONS[label] ?? "•"}
-    </Text>
+    <Text style={[styles.icon, focused && styles.iconFocused]}>{TAB_ICONS[label] ?? "•"}</Text>
   </View>
 );
 

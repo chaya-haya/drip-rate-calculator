@@ -4,6 +4,7 @@ import { renderHook, act, waitFor } from "@testing-library/react-native";
 import { PatientsProvider, usePatients } from "./PatientsContext";
 import { savePatients, loadPatients } from "../lib/storage";
 import { PATIENT_STATUS, INFUSION_SETS } from "../constants/infusionSets";
+import { useNotifications } from "./NotificationContext";
 
 jest.mock("../lib/storage", () => ({
   savePatients: jest.fn().mockResolvedValue({ success: true }),
@@ -14,6 +15,10 @@ jest.mock("expo-crypto", () => ({
   randomUUID: jest.fn(() => "mock-uuid-1"),
 }));
 
+jest.mock("./NotificationContext", () => ({
+  useNotifications: jest.fn(),
+}));
+
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <PatientsProvider>{children}</PatientsProvider>
 );
@@ -21,6 +26,10 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 beforeEach(() => {
   jest.clearAllMocks();
   (loadPatients as jest.Mock).mockResolvedValue({ success: true, data: [] });
+  (useNotifications as jest.Mock).mockReturnValue({
+    scheduleForPatient: jest.fn().mockResolvedValue("notif-123"),
+    cancelForPatient: jest.fn().mockResolvedValue(undefined),
+  });
   // AppState.addEventListenerのデフォルトモック（removeを持つオブジェクトを返す）
   jest.spyOn(AppState, "addEventListener").mockReturnValue({
     remove: jest.fn(),
@@ -86,6 +95,61 @@ describe("PatientsContext", () => {
       expect(result.current.patients).toHaveLength(1);
       expect(result.current.patients[0].id).toBe("stored-1");
     });
+
+    test("読み込み失敗時はloadErrorを設定", async () => {
+      (loadPatients as jest.Mock).mockResolvedValue({
+        success: false,
+        data: [],
+      });
+
+      const { result } = renderHook(() => usePatients(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.loadError).toBe("患者データの読み込みに失敗しました。");
+    });
+
+    test("保存失敗時はsaveErrorを設定", async () => {
+      (savePatients as jest.Mock).mockResolvedValueOnce({ success: false });
+
+      const { result } = renderHook(() => usePatients(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      await act(async () => {
+        await result.current.addPatient({});
+      });
+
+      expect(result.current.saveError?.message).toBe("患者データの保存に失敗しました。");
+      expect(result.current.saveError?.reason).toBe("ローカルストレージへの保存に失敗しました。");
+    });
+
+    test("retrySavePatientsで現在のstateを再保存できる", async () => {
+      (savePatients as jest.Mock)
+        .mockResolvedValueOnce({ success: false })
+        .mockResolvedValueOnce({ success: true });
+
+      const { result } = renderHook(() => usePatients(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      await act(async () => {
+        await result.current.addPatient({});
+      });
+
+      await act(async () => {
+        await result.current.retrySavePatients();
+      });
+
+      expect(savePatients).toHaveBeenCalledTimes(2);
+      expect(result.current.saveError).toBeNull();
+    });
   });
 
   describe("addPatient", () => {
@@ -105,9 +169,10 @@ describe("PatientsContext", () => {
         });
       });
 
-      expect(newPatient.roomNumber).toBe("201");
-      expect(newPatient.bedNumber).toBe("B");
-      expect(newPatient.volume).toBe("1000");
+      expect(newPatient.patient.roomNumber).toBe("201");
+      expect(newPatient.patient.bedNumber).toBe("B");
+      expect(newPatient.patient.volume).toBe("1000");
+      expect(newPatient.saved).toBe(true);
       expect(result.current.patients).toHaveLength(1);
       expect(savePatients).toHaveBeenCalled();
     });
@@ -124,9 +189,9 @@ describe("PatientsContext", () => {
         newPatient = await result.current.addPatient({});
       });
 
-      expect(newPatient.roomNumber).toBe("");
-      expect(newPatient.isRunning).toBe(false);
-      expect(newPatient.infusionSet).toEqual(INFUSION_SETS.ADULT);
+      expect(newPatient.patient.roomNumber).toBe("");
+      expect(newPatient.patient.isRunning).toBe(false);
+      expect(newPatient.patient.infusionSet).toEqual(INFUSION_SETS.ADULT);
     });
   });
 
@@ -168,6 +233,48 @@ describe("PatientsContext", () => {
 
       expect(result.current.patients).toHaveLength(0);
       expect(savePatients).toHaveBeenCalled();
+    });
+  });
+
+  describe("reloadPatients", () => {
+    test("再読み込みで最新データを取得", async () => {
+      const { result } = renderHook(() => usePatients(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      (loadPatients as jest.Mock).mockResolvedValueOnce({
+        success: true,
+        data: [
+          {
+            id: "reloaded",
+            roomNumber: "301",
+            bedNumber: "C",
+            infusionSet: INFUSION_SETS.ADULT,
+            volume: "250",
+            hours: "1",
+            minutes: "0",
+            isRunning: false,
+            startedAt: null,
+            endTime: null,
+            notificationEnabled: false,
+            notificationTiming: { id: "5", label: "5分前", minutes: 5 },
+            hapticEnabled: false,
+            hapticIntensity: "medium",
+            createdAt: "2024-01-15T10:00:00.000Z",
+            updatedAt: "2024-01-15T10:00:00.000Z",
+          },
+        ],
+      });
+
+      await act(async () => {
+        await result.current.reloadPatients();
+      });
+
+      expect(result.current.patients).toHaveLength(1);
+      expect(result.current.patients[0].id).toBe("reloaded");
+      expect(result.current.loadError).toBeNull();
     });
   });
 
@@ -218,6 +325,95 @@ describe("PatientsContext", () => {
       });
 
       expect(result.current.getPatient("nonexistent")).toBeUndefined();
+    });
+  });
+
+  describe("開始停止と通知", () => {
+    test("startPatientは通知ONの患者で通知をスケジュール", async () => {
+      const scheduleForPatient = jest.fn().mockResolvedValue("notif-123");
+      (useNotifications as jest.Mock).mockReturnValue({
+        scheduleForPatient,
+        cancelForPatient: jest.fn().mockResolvedValue(undefined),
+      });
+      (loadPatients as jest.Mock).mockResolvedValue({
+        success: true,
+        data: [
+          {
+            id: "p1",
+            roomNumber: "101",
+            bedNumber: "A",
+            infusionSet: INFUSION_SETS.ADULT,
+            volume: "500",
+            hours: "2",
+            minutes: "0",
+            isRunning: false,
+            startedAt: null,
+            endTime: null,
+            notificationEnabled: true,
+            notificationTiming: { id: "5", label: "5分前", minutes: 5 },
+            hapticEnabled: false,
+            hapticIntensity: "medium",
+            createdAt: "2024-01-15T10:00:00.000Z",
+            updatedAt: "2024-01-15T10:00:00.000Z",
+          },
+        ],
+      });
+
+      const { result } = renderHook(() => usePatients(), { wrapper });
+      const endTime = new Date("2024-01-15T12:00:00.000Z");
+
+      await waitFor(() => {
+        expect(result.current.patients).toHaveLength(1);
+      });
+
+      await act(async () => {
+        await result.current.startPatient("p1", endTime);
+      });
+
+      expect(scheduleForPatient).toHaveBeenCalledWith("p1", endTime, 5);
+    });
+
+    test("stopPatientは通知をキャンセル", async () => {
+      const cancelForPatient = jest.fn().mockResolvedValue(undefined);
+      (useNotifications as jest.Mock).mockReturnValue({
+        scheduleForPatient: jest.fn().mockResolvedValue("notif-123"),
+        cancelForPatient,
+      });
+      (loadPatients as jest.Mock).mockResolvedValue({
+        success: true,
+        data: [
+          {
+            id: "p1",
+            roomNumber: "101",
+            bedNumber: "A",
+            infusionSet: INFUSION_SETS.ADULT,
+            volume: "500",
+            hours: "2",
+            minutes: "0",
+            isRunning: true,
+            startedAt: "2024-01-15T10:00:00.000Z",
+            endTime: "2024-01-15T12:00:00.000Z",
+            notificationEnabled: true,
+            notificationTiming: { id: "5", label: "5分前", minutes: 5 },
+            hapticEnabled: false,
+            hapticIntensity: "medium",
+            createdAt: "2024-01-15T10:00:00.000Z",
+            updatedAt: "2024-01-15T10:00:00.000Z",
+          },
+        ],
+      });
+
+      const { result } = renderHook(() => usePatients(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.patients).toHaveLength(1);
+      });
+
+      await act(async () => {
+        await result.current.stopPatient("p1");
+      });
+
+      expect(cancelForPatient).toHaveBeenCalledWith("p1");
     });
   });
 

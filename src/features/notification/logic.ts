@@ -30,6 +30,17 @@ export const requestNotificationPermission = async (): Promise<boolean> => {
   }
 };
 
+// 現在の通知権限を確認（ダイアログは表示しない）
+export const getNotificationPermissionStatus = async (): Promise<boolean> => {
+  try {
+    const { status } = await Notifications.getPermissionsAsync();
+    return status === "granted";
+  } catch (error) {
+    logger.warn("通知権限の確認に失敗:", error);
+    return false;
+  }
+};
+
 // 患者通知をスケジュール
 export const schedulePatientNotification = async (
   patientId: string,

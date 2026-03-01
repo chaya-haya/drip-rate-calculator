@@ -10,7 +10,11 @@ interface StatusBadgeProps {
 // ステータスバッジコンポーネント
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
   return (
-    <View style={[styles.badge, { backgroundColor: status.color }]}>
+    <View
+      style={[styles.badge, { backgroundColor: status.color }]}
+      accessibilityRole="text"
+      accessibilityLabel={`ステータス: ${status.label}`}
+    >
       <Text style={styles.text}>{status.label}</Text>
     </View>
   );

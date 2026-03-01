@@ -24,6 +24,7 @@ import { DripAnimation } from "../../src/components/DripAnimation";
 import { NotificationControl } from "../../src/components/NotificationControl";
 import { HapticControl } from "../../src/components/HapticControl";
 import { SavePresetModal } from "../../src/components/SavePresetModal";
+import { UnsavedBadge, UnsavedErrorNotice } from "../../src/components/UnsavedStatus";
 
 import { useCalculation } from "../../src/features/calculation/hooks/useCalculation";
 import { HAPTIC_INTENSITY } from "../../src/features/calculation/hooks/useDripAnimation";
@@ -36,9 +37,18 @@ import type { NotificationTimingOption, HapticIntensity, PresetCreateData } from
 export default function PatientDetailScreen() {
   const { id: patientId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { getPatient, updatePatient, deletePatient, stopPatient } = usePatients();
-  const { addPreset } = usePresets();
-  const { scheduleForPatient, cancelForPatient, hasPermission } = useNotifications();
+  const {
+    getPatient,
+    updatePatient,
+    deletePatient,
+    startPatient,
+    stopPatient,
+    isSaving,
+    saveError,
+    retrySavePatients,
+  } = usePatients();
+  const { addPreset, isSaving: isSavingPreset } = usePresets();
+  const { scheduleForPatient, cancelForPatient, hasPermission, ensurePermission } = useNotifications();
 
   const patient = getPatient(patientId!);
 
@@ -132,7 +142,7 @@ export default function PatientDetailScreen() {
         hapticIntensity: patient.hapticIntensity || HAPTIC_INTENSITY.MEDIUM,
       };
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- patientオブジェクト全体を依存に入れると無限ループするため、IDのみで制御
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- patientオブジェクト全体を依存に入れると無限ループするため、IDのみで制御
   }, [patient?.id]);
 
   // 変更有無の検知
@@ -173,13 +183,9 @@ export default function PatientDetailScreen() {
     return calculateEndTime(totalMinutes);
   }, [isRunning, fixedEndTime, totalMinutes]);
 
-  // 患者名
-  const patientName =
-    roomNumber || bedNumber ? `${roomNumber || "---"}号室 ${bedNumber || "-"}番ベッド` : "新規患者";
-
   // 保存
   const handleSave = async () => {
-    await updatePatient(patientId!, {
+    return updatePatient(patientId!, {
       roomNumber,
       bedNumber,
       volume,
@@ -195,6 +201,28 @@ export default function PatientDetailScreen() {
 
   // 戻る（変更がなければダイアログをスキップ）
   const handleBackWithConfirmation = () => {
+    if (saveError && !isSaving) {
+      Alert.alert(
+        "未保存の変更があります",
+        "保存に失敗した変更があります。このまま戻ると、端末再起動後に失われる可能性があります。",
+        [
+          {
+            text: "そのまま戻る",
+            style: "destructive",
+            onPress: () => router.back(),
+          },
+          { text: "キャンセル", style: "cancel" },
+          {
+            text: "保存を再試行",
+            onPress: async () => {
+              await retrySavePatients();
+            },
+          },
+        ]
+      );
+      return;
+    }
+
     // 変更がなければダイアログをスキップして一覧へ戻る
     if (!hasChanges) {
       router.back();
@@ -211,8 +239,10 @@ export default function PatientDetailScreen() {
       {
         text: "保存",
         onPress: async () => {
-          await handleSave();
-          router.back();
+          const saved = await handleSave();
+          if (saved) {
+            router.back();
+          }
         },
       },
     ]);
@@ -224,8 +254,8 @@ export default function PatientDetailScreen() {
     setFixedEndTime(endTime);
     setIsRunning(true);
 
-    // フォームデータと実行状態を1回のupdatePatientで原子的に保存する（stale closure回避）
-    await updatePatient(patientId!, {
+    // フォームデータを保存してから、開始処理を共通経路で実行する
+    const settingsSaved = await updatePatient(patientId!, {
       roomNumber,
       bedNumber,
       volume,
@@ -236,17 +266,12 @@ export default function PatientDetailScreen() {
       notificationTiming,
       hapticEnabled,
       hapticIntensity,
-      isRunning: true,
-      startedAt: new Date().toISOString(),
-      endTime: endTime.toISOString(),
     });
+    const startedSaved = await startPatient(patientId!, endTime);
 
-    if (notificationEnabled) {
-      await scheduleForPatient(patientId!, endTime, notificationTiming.minutes);
+    if (settingsSaved && startedSaved) {
+      router.back();
     }
-
-    // 患者一覧へ戻る（保存ダイアログをスキップ）
-    router.back();
   };
 
   // 停止
@@ -255,7 +280,6 @@ export default function PatientDetailScreen() {
     setFixedEndTime(null);
 
     await stopPatient(patientId!);
-    await cancelForPatient(patientId!);
   };
 
   // 削除
@@ -267,20 +291,34 @@ export default function PatientDetailScreen() {
         style: "destructive",
         onPress: async () => {
           await cancelForPatient(patientId!);
-          await deletePatient(patientId!);
-          router.back();
+          const saved = await deletePatient(patientId!);
+          if (saved) {
+            router.back();
+          }
         },
       },
     ]);
   };
 
   // プリセット保存
-  const handleSavePreset = async (presetData: PresetCreateData) => {
-    await addPreset(presetData);
+  const handleSavePreset = async (presetData: PresetCreateData): Promise<boolean> => {
+    const result = await addPreset(presetData);
+    return result.saved;
   };
 
   // 通知トグル
   const handleToggleNotification = async (enabled: boolean) => {
+    if (enabled && !hasPermission) {
+      const granted = await ensurePermission();
+      if (!granted) {
+        Alert.alert(
+          "通知を有効にできません",
+          "終了通知を利用するには、まずiPhone側で通知を許可してください。"
+        );
+        return;
+      }
+    }
+
     setNotificationEnabled(enabled);
 
     if (enabled && isRunning && fixedEndTime) {
@@ -313,12 +351,19 @@ export default function PatientDetailScreen() {
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleBackWithConfirmation}>
+        <TouchableOpacity
+          onPress={handleBackWithConfirmation}
+          accessibilityRole="button"
+          accessibilityLabel="戻る"
+        >
           <Text style={styles.backText}>← 戻る</Text>
         </TouchableOpacity>
-        <Text style={styles.title} numberOfLines={1}>
-          患者設定
-        </Text>
+        <View style={styles.titleRow}>
+          <Text style={styles.title} numberOfLines={1}>
+            患者設定
+          </Text>
+          <UnsavedBadge visible={Boolean(saveError)} />
+        </View>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -333,6 +378,7 @@ export default function PatientDetailScreen() {
         >
           {/* 点滴アニメーション・計算結果 */}
           <View style={commonStyles.card}>
+            <UnsavedErrorNotice error={saveError} isSaving={isSaving} onRetry={retrySavePatients} />
             <DripAnimation
               dropInterval={dropInterval}
               isActive={isValid}
@@ -360,9 +406,13 @@ export default function PatientDetailScreen() {
                 <TouchableOpacity
                   style={styles.startButton}
                   onPress={handleStart}
+                  disabled={isSaving}
                   activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityLabel="投与を開始"
+                  accessibilityState={{ disabled: isSaving }}
                 >
-                  <Text style={styles.startButtonText}>スタート</Text>
+                  <Text style={styles.startButtonText}>{isSaving ? "保存中..." : "スタート"}</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -372,9 +422,13 @@ export default function PatientDetailScreen() {
                 <TouchableOpacity
                   style={styles.stopButton}
                   onPress={handleStop}
+                  disabled={isSaving}
                   activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityLabel="投与を停止"
+                  accessibilityState={{ disabled: isSaving }}
                 >
-                  <Text style={styles.stopButtonText}>ストップ</Text>
+                  <Text style={styles.stopButtonText}>{isSaving ? "保存中..." : "ストップ"}</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -455,8 +509,18 @@ export default function PatientDetailScreen() {
           </View>
 
           {/* 削除ボタン */}
-          <TouchableOpacity style={styles.deleteButton} onPress={handleDelete} activeOpacity={0.7}>
-            <Text style={styles.deleteButtonText}>この患者を削除</Text>
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={handleDelete}
+            disabled={isSaving}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="この患者を削除"
+            accessibilityState={{ disabled: isSaving }}
+          >
+            <Text style={styles.deleteButtonText}>
+              {isSaving ? "保存中..." : "この患者を削除"}
+            </Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -466,6 +530,7 @@ export default function PatientDetailScreen() {
         visible={showPresetModal}
         onClose={() => setShowPresetModal(false)}
         onSave={handleSavePreset}
+        isSaving={isSavingPreset}
         currentSettings={{
           infusionSet,
           volume,
@@ -500,8 +565,13 @@ const styles = StyleSheet.create({
     fontSize: fontSize.large,
     fontWeight: "bold",
     color: colors.text,
+  },
+  titleRow: {
     flex: 1,
-    textAlign: "center",
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: spacing.sm,
     marginHorizontal: spacing.sm,
   },
   headerSpacer: {
@@ -514,7 +584,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: spacing.xl,
+    paddingBottom: spacing.xl * 2,
   },
   sectionTitle: {
     fontSize: fontSize.large,

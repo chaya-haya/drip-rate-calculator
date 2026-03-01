@@ -32,7 +32,11 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
   const roundedDrops = Math.round(dropsPerMinute * 10) / 10;
 
   return (
-    <View style={styles.container}>
+    <View
+      style={styles.container}
+      accessibilityRole="summary"
+      accessibilityLabel={`1分あたり${roundedDrops}滴、総滴下数${totalDrops.toLocaleString()}滴、投与時間${Math.floor(totalMinutes / 60)}時間${totalMinutes % 60}分${endTime ? `、終了予定${formatTime(endTime)}` : ""}`}
+    >
       {/* メイン結果: 滴/分 */}
       <View style={styles.mainResult}>
         <Text style={styles.mainValue}>{roundedDrops}</Text>
@@ -88,7 +92,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   mainValue: {
-    fontSize: 64,
+    fontSize: 80,
     fontWeight: "bold",
     color: colors.primary,
   },

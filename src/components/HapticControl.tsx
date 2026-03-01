@@ -48,6 +48,8 @@ export const HapticControl: React.FC<HapticControlProps> = ({
           onValueChange={onToggle}
           trackColor={{ false: colors.border, true: colors.primaryLight }}
           thumbColor={isEnabled ? colors.primary : colors.textSecondary}
+          accessibilityLabel="振動フィードバック"
+          accessibilityRole="switch"
         />
       </View>
 
@@ -63,6 +65,9 @@ export const HapticControl: React.FC<HapticControlProps> = ({
                   style={[styles.intensityButton, isSelected && styles.intensityButtonSelected]}
                   onPress={() => onIntensityChange(option.id)}
                   activeOpacity={0.7}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: isSelected }}
+                  accessibilityLabel={`振動の強さ ${option.label}`}
                 >
                   <Text
                     style={[

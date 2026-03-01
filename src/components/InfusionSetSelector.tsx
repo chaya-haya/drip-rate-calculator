@@ -19,7 +19,7 @@ export const InfusionSetSelector: React.FC<InfusionSetSelectorProps> = ({
   return (
     <View style={[styles.container, disabled && styles.disabled]}>
       <Text style={styles.label}>輸液セット</Text>
-      <View style={styles.buttonGroup}>
+      <View style={styles.buttonGroup} accessibilityRole="radiogroup">
         {INFUSION_SET_LIST.map((set) => {
           const isSelected = selectedSet.id === set.id;
           return (
@@ -29,6 +29,9 @@ export const InfusionSetSelector: React.FC<InfusionSetSelectorProps> = ({
               onPress={() => onSelectSet(set)}
               activeOpacity={0.7}
               disabled={disabled}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: isSelected }}
+              accessibilityLabel={`${set.name}、${set.description}`}
             >
               <Text style={[styles.buttonText, isSelected && styles.buttonTextSelected]}>
                 {set.name}

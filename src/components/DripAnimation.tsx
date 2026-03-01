@@ -45,7 +45,11 @@ export const DripAnimation: React.FC<DripAnimationProps> = ({
   });
 
   return (
-    <View style={styles.container}>
+    <View
+      style={styles.container}
+      accessibilityElementsHidden={true}
+      importantForAccessibility="no-hide-descendants"
+    >
       {/* 点滴ボトル（簡略化） */}
       <View style={styles.bottle}>
         <View style={styles.bottleBody} />

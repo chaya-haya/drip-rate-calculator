@@ -3,13 +3,15 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "reac
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { usePresets } from "../../src/contexts/PresetsContext";
+import { UnsavedBadge, UnsavedErrorNotice } from "../../src/components/UnsavedStatus";
 import { colors, spacing, fontSize } from "../../src/constants/theme";
 
 // プリセット編集画面
 export default function PresetEditScreen() {
   const { id: presetId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { getPreset, updatePreset, deletePreset } = usePresets();
+  const { getPreset, updatePreset, deletePreset, isSaving, saveError, retrySavePresets } =
+    usePresets();
   const [name, setName] = useState("");
 
   const preset = getPreset(presetId!);
@@ -22,9 +24,37 @@ export default function PresetEditScreen() {
 
   const handleSave = async () => {
     if (name.trim()) {
-      await updatePreset(presetId!, { name: name.trim() });
-      router.back();
+      const saved = await updatePreset(presetId!, { name: name.trim() });
+      if (saved) {
+        router.back();
+      }
     }
+  };
+
+  const handleBack = () => {
+    if (!saveError || isSaving) {
+      router.back();
+      return;
+    }
+
+    Alert.alert(
+      "未保存の変更があります",
+      "保存に失敗した変更があります。このまま戻ると、端末再起動後に失われる可能性があります。",
+      [
+        {
+          text: "そのまま戻る",
+          style: "destructive",
+          onPress: () => router.back(),
+        },
+        { text: "キャンセル", style: "cancel" },
+        {
+          text: "保存を再試行",
+          onPress: async () => {
+            await retrySavePresets();
+          },
+        },
+      ]
+    );
   };
 
   const handleDelete = () => {
@@ -34,8 +64,10 @@ export default function PresetEditScreen() {
         text: "削除",
         style: "destructive",
         onPress: async () => {
-          await deletePreset(presetId!);
-          router.back();
+          const saved = await deletePreset(presetId!);
+          if (saved) {
+            router.back();
+          }
         },
       },
     ]);
@@ -58,16 +90,32 @@ export default function PresetEditScreen() {
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity
+          onPress={handleBack}
+          accessibilityRole="button"
+          accessibilityLabel="戻る"
+        >
           <Text style={styles.backText}>← 戻る</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>プリセット編集</Text>
-        <TouchableOpacity onPress={handleSave}>
-          <Text style={styles.saveText}>保存</Text>
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>プリセット編集</Text>
+          <UnsavedBadge visible={Boolean(saveError)} />
+        </View>
+        <TouchableOpacity
+          onPress={handleSave}
+          disabled={isSaving}
+          accessibilityRole="button"
+          accessibilityLabel="保存"
+          accessibilityState={{ disabled: isSaving }}
+        >
+          <Text style={[styles.saveText, isSaving && styles.saveTextDisabled]}>
+            {isSaving ? "保存中..." : "保存"}
+          </Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.content}>
+        <UnsavedErrorNotice error={saveError} isSaving={isSaving} onRetry={retrySavePresets} />
         <Text style={styles.label}>プリセット名</Text>
         <TextInput
           style={styles.input}
@@ -76,6 +124,7 @@ export default function PresetEditScreen() {
           placeholder="プリセット名を入力"
           placeholderTextColor={colors.border}
           maxLength={30}
+          accessibilityLabel="プリセット名"
         />
 
         <View style={styles.summary}>
@@ -85,7 +134,13 @@ export default function PresetEditScreen() {
           <Text style={styles.summaryText}>・投与時間: {timeText}</Text>
         </View>
 
-        <TouchableOpacity style={styles.deleteButton} onPress={handleDelete} activeOpacity={0.7}>
+        <TouchableOpacity
+          style={styles.deleteButton}
+        onPress={handleDelete}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="プリセットを削除"
+        >
           <Text style={styles.deleteButtonText}>プリセットを削除</Text>
         </TouchableOpacity>
       </View>
@@ -117,10 +172,18 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: colors.text,
   },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
   saveText: {
     color: colors.primary,
     fontSize: fontSize.medium,
     fontWeight: "600",
+  },
+  saveTextDisabled: {
+    color: colors.border,
   },
   content: {
     padding: spacing.md,

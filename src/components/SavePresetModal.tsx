@@ -22,7 +22,8 @@ interface CurrentSettings {
 interface SavePresetModalProps {
   visible: boolean;
   onClose: () => void;
-  onSave: (presetData: PresetCreateData) => Promise<void>;
+  onSave: (presetData: PresetCreateData) => Promise<boolean>;
+  isSaving?: boolean;
   currentSettings: CurrentSettings;
 }
 
@@ -31,18 +32,21 @@ export const SavePresetModal: React.FC<SavePresetModalProps> = ({
   visible,
   onClose,
   onSave,
+  isSaving = false,
   currentSettings,
 }) => {
   const [name, setName] = useState("");
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (name.trim()) {
-      onSave({
+      const saved = await onSave({
         name: name.trim(),
         ...currentSettings,
       });
-      setName("");
-      onClose();
+      if (saved) {
+        setName("");
+        onClose();
+      }
     }
   };
 
@@ -60,10 +64,15 @@ export const SavePresetModal: React.FC<SavePresetModalProps> = ({
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.overlay}
       >
-        <View style={styles.container}>
+        <View style={styles.container} accessibilityViewIsModal={true}>
           <View style={styles.header}>
             <Text style={styles.title}>プリセットを保存</Text>
-            <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
+            <TouchableOpacity
+              onPress={handleClose}
+              style={styles.closeButton}
+              accessibilityRole="button"
+              accessibilityLabel="閉じる"
+            >
               <Text style={styles.closeText}>×</Text>
             </TouchableOpacity>
           </View>
@@ -77,6 +86,7 @@ export const SavePresetModal: React.FC<SavePresetModalProps> = ({
             placeholderTextColor={colors.border}
             autoFocus
             maxLength={30}
+            accessibilityLabel="プリセット名"
           />
 
           <View style={styles.summary}>
@@ -87,16 +97,25 @@ export const SavePresetModal: React.FC<SavePresetModalProps> = ({
           </View>
 
           <View style={styles.actions}>
-            <TouchableOpacity style={styles.cancelButton} onPress={handleClose} activeOpacity={0.7}>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={handleClose}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="キャンセル"
+            >
               <Text style={styles.cancelButtonText}>キャンセル</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.saveButton, !name.trim() && styles.saveButtonDisabled]}
+              style={[styles.saveButton, (!name.trim() || isSaving) && styles.saveButtonDisabled]}
               onPress={handleSave}
-              disabled={!name.trim()}
+              disabled={!name.trim() || isSaving}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="保存"
+              accessibilityState={{ disabled: !name.trim() || isSaving }}
             >
-              <Text style={styles.saveButtonText}>保存</Text>
+              <Text style={styles.saveButtonText}>{isSaving ? "保存中..." : "保存"}</Text>
             </TouchableOpacity>
           </View>
         </View>

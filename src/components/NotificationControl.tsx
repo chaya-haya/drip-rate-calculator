@@ -49,6 +49,8 @@ export const NotificationControl: React.FC<NotificationControlProps> = ({
           onValueChange={handleToggle}
           trackColor={{ false: colors.border, true: colors.primaryLight }}
           thumbColor={isEnabled ? colors.primary : colors.textSecondary}
+          accessibilityLabel="終了通知"
+          accessibilityRole="switch"
         />
       </View>
 
@@ -65,6 +67,9 @@ export const NotificationControl: React.FC<NotificationControlProps> = ({
                   style={[styles.timingButton, isSelected && styles.timingButtonSelected]}
                   onPress={() => handleTimingSelect(option)}
                   activeOpacity={0.7}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: isSelected }}
+                  accessibilityLabel={`通知タイミング ${option.label}`}
                 >
                   <Text
                     style={[styles.timingButtonText, isSelected && styles.timingButtonTextSelected]}

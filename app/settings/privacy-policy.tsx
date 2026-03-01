@@ -37,13 +37,16 @@ export default function PrivacyPolicyPage() {
 
         <Text style={styles.sectionTitle}>3. データの保存と管理</Text>
         <Text style={styles.body}>
-          本アプリのすべてのデータはお使いのデバイス内にのみ保存されます。外部サーバーへのデータ送信は一切行いません。{"\n\n"}
+          本アプリのすべてのデータはお使いのデバイス内にのみ保存されます。外部サーバーへのデータ送信は一切行いません。
+          {"\n\n"}
           お客様のデータが第三者に共有・販売されることはありません。
         </Text>
 
         <Text style={styles.sectionTitle}>4. Apple Watchとのデータ同期</Text>
         <Text style={styles.body}>
-          本アプリはApple Watchとの間でデータを同期する機能を提供します。この同期はAppleのWatchConnectivityフレームワークを使用し、お使いのiPhoneとApple Watch間でのみ直接行われます。{"\n\n"}
+          本アプリはApple
+          Watchとの間でデータを同期する機能を提供します。この同期はAppleのWatchConnectivityフレームワークを使用し、お使いのiPhoneとApple
+          Watch間でのみ直接行われます。{"\n\n"}
           同期データがインターネットを経由して外部に送信されることはありません。
         </Text>
 
@@ -60,7 +63,8 @@ export default function PrivacyPolicyPage() {
 
         <Text style={styles.sectionTitle}>7. お問い合わせ</Text>
         <Text style={styles.body}>
-          本プライバシーポリシーに関するご質問やお問い合わせは、App Storeのアプリページからお願いいたします。
+          本プライバシーポリシーに関するご質問やお問い合わせは、App
+          Storeのアプリページからお願いいたします。
         </Text>
 
         <Text style={styles.sectionTitle}>8. ポリシーの変更</Text>

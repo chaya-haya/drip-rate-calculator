@@ -1,12 +1,5 @@
 import React from "react";
-import {
-  Modal,
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-} from "react-native";
+import { Modal, View, Text, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
 import { useDisclaimer } from "../contexts/DisclaimerContext";
 import { colors, spacing, fontSize } from "../constants/theme";
 
@@ -20,29 +13,33 @@ export const DisclaimerModal: React.FC = () => {
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.overlay}>
-        <View style={styles.container}>
+        <View style={styles.container} accessibilityViewIsModal={true}>
           <Text style={styles.title}>免責事項・ご利用にあたって</Text>
 
           <ScrollView style={styles.scrollView} showsVerticalScrollIndicator>
             <Text style={styles.body}>
-              本アプリは点滴速度の計算を補助するツールです。{"\n\n"}
+              本アプリは、点滴管理に関する計算の参考情報を提供する補助ツールです。{"\n\n"}
               【重要な注意事項】{"\n"}
-              ・本アプリの計算結果はあくまで参考値です。{"\n"}
-              ・実際の投薬・点滴管理は、必ず担当医師・看護師の指示に従ってください。{"\n"}
-              ・本アプリの使用によって生じたいかなる損害についても、開発者は一切の責任を負いません。{"\n"}
+              ・本アプリの計算結果は参考情報であり、正確性や完全性を保証するものではありません。{"\n"}
+              ・本アプリは医療機器ではなく、診断、治療、投与判断その他の医療判断を目的とするものではありません。{"\n"}
+              ・本アプリの表示内容のみに基づいて診療上の判断を行わないでください。{"\n"}
+              ・実際の投与、滴下管理、患者管理にあたっては、必ず医師の指示、院内手順、実際の滴下状況を確認してください。{"\n"}
               ・医療行為に関する最終判断は、必ず医療従事者が行ってください。{"\n\n"}
-              本アプリは医療機器ではありません。診断・治療を目的とするものではありません。{"\n\n"}
               上記の内容を理解・同意した上でご利用ください。
             </Text>
           </ScrollView>
 
-          <TouchableOpacity style={styles.acceptButton} onPress={accept} activeOpacity={0.8}>
+          <TouchableOpacity
+            style={styles.acceptButton}
+            onPress={accept}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="同意してアプリを使用する"
+          >
             <Text style={styles.acceptButtonText}>同意してアプリを使用する</Text>
           </TouchableOpacity>
 
-          <Text style={styles.note}>
-            ※ 同意しない場合はアプリを終了してください
-          </Text>
+          <Text style={styles.note}>※ 同意しない場合はアプリを終了してください</Text>
         </View>
       </View>
     </Modal>

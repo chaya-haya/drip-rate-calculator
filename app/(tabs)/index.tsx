@@ -4,23 +4,34 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { usePatients } from "../../src/contexts/PatientsContext";
 import { PatientCard } from "../../src/components/PatientCard";
+import { UnsavedBadge, UnsavedErrorNotice } from "../../src/components/UnsavedStatus";
 import { colors, spacing, fontSize } from "../../src/constants/theme";
 import type { PatientWithStatus, PatientStatusId } from "../../src/types";
 
 // 患者一覧画面
 export default function PatientListScreen() {
   const router = useRouter();
-  const { patients, isLoading, addPatient } = usePatients();
+  const {
+    patients,
+    isLoading,
+    isSaving,
+    loadError,
+    saveError,
+    addPatient,
+    reloadPatients,
+    retrySavePatients,
+  } = usePatients();
   const [refreshing, setRefreshing] = useState(false);
 
   const handleRefresh = async () => {
     setRefreshing(true);
+    await reloadPatients();
     setRefreshing(false);
   };
 
   const handleAddPatient = async () => {
-    const newPatient = await addPatient({});
-    router.push(`/patient/${newPatient.id}`);
+    const result = await addPatient({});
+    router.push(`/patient/${result.patient.id}`);
   };
 
   const handlePatientPress = (patient: PatientWithStatus) => {
@@ -41,9 +52,20 @@ export default function PatientListScreen() {
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <View style={styles.header}>
-        <Text style={styles.title}>点滴管理</Text>
-        <TouchableOpacity style={styles.addButton} onPress={handleAddPatient} activeOpacity={0.7}>
-          <Text style={styles.addButtonText}>+ 追加</Text>
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>点滴管理</Text>
+          <UnsavedBadge visible={Boolean(saveError)} />
+        </View>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={handleAddPatient}
+          disabled={isSaving}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="患者を追加"
+          accessibilityState={{ disabled: isSaving }}
+        >
+          <Text style={styles.addButtonText}>{isSaving ? "保存中..." : "+ 追加"}</Text>
         </TouchableOpacity>
       </View>
 
@@ -52,12 +74,30 @@ export default function PatientListScreen() {
         contentContainerStyle={styles.listContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
       >
+        <UnsavedErrorNotice error={saveError} isSaving={isSaving} onRetry={retrySavePatients} />
         {isLoading ? (
           <Text style={styles.emptyText}>読み込み中...</Text>
+        ) : loadError ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.errorTitle}>{loadError}</Text>
+            <TouchableOpacity
+              style={styles.retryButton}
+              onPress={reloadPatients}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="患者データを再読み込み"
+            >
+              <Text style={styles.retryButtonText}>再試行</Text>
+            </TouchableOpacity>
+          </View>
         ) : sortedPatients.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>患者が登録されていません</Text>
-            <Text style={styles.emptyHint}>「+ 追加」ボタンで患者を追加してください</Text>
+            <Text style={styles.emptyIcon}>💧</Text>
+            <Text style={styles.emptyTitle}>患者が登録されていません</Text>
+            <Text style={styles.emptyHint}>
+              右上の「+ 追加」ボタンから患者を登録して{"\n"}
+              点滴の滴下数を計算できます
+            </Text>
           </View>
         ) : (
           sortedPatients.map((patient) => (
@@ -93,6 +133,11 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: colors.text,
   },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
   addButton: {
     backgroundColor: colors.primary,
     paddingHorizontal: spacing.md,
@@ -109,19 +154,44 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: spacing.md,
+    paddingBottom: spacing.xl * 2,
   },
   emptyContainer: {
     alignItems: "center",
-    paddingVertical: spacing.xl * 2,
+    paddingVertical: spacing.xl * 3,
   },
-  emptyText: {
+  emptyIcon: {
+    fontSize: 48,
+    marginBottom: spacing.md,
+  },
+  emptyTitle: {
+    fontSize: fontSize.large,
+    fontWeight: "600",
+    color: colors.text,
+    textAlign: "center",
+    marginBottom: spacing.sm,
+  },
+  emptyHint: {
     fontSize: fontSize.medium,
     color: colors.textSecondary,
     textAlign: "center",
+    lineHeight: 24,
   },
-  emptyHint: {
-    fontSize: fontSize.small,
-    color: colors.textSecondary,
-    marginTop: spacing.sm,
+  errorTitle: {
+    fontSize: fontSize.medium,
+    color: colors.warning,
+    textAlign: "center",
+    marginBottom: spacing.md,
+  },
+  retryButton: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: colors.textLight,
+    fontSize: fontSize.medium,
+    fontWeight: "600",
   },
 });

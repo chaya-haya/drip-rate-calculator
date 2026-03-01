@@ -4,6 +4,7 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useRef,
   ReactNode,
 } from "react";
 import { AppState, AppStateStatus } from "react-native";
@@ -12,8 +13,9 @@ import { savePatients, loadPatients } from "../lib/storage";
 import { INFUSION_SETS } from "../constants/infusionSets";
 import { calculatePatientStatus, calculateRemainingTime } from "../features/patients/logic";
 import type { Patient, PatientWithStatus, PatientCreateData, PatientUpdateData } from "../types";
-import type { PatientsContextValue } from "../types/context";
+import type { PatientMutationResult, PatientsContextValue, SaveErrorInfo } from "../types/context";
 import { useWatchSync } from "../hooks/useWatchSync";
+import { useNotifications } from "./NotificationContext";
 
 const PatientsContext = createContext<PatientsContextValue | null>(null);
 
@@ -32,8 +34,18 @@ interface PatientsProviderProps {
 export const PatientsProvider: React.FC<PatientsProviderProps> = ({ children }) => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<SaveErrorInfo | null>(null);
   // ステータス再計算トリガー（値が変わるとpatientsWithStatusが再計算される）
   const [, setStatusTick] = useState(0);
+  const patientsRef = useRef<Patient[]>([]);
+  const { scheduleForPatient, cancelForPatient } = useNotifications();
+
+  const setPatientsState = useCallback((nextPatients: Patient[]) => {
+    patientsRef.current = nextPatients;
+    setPatients(nextPatients);
+  }, []);
 
   // フォアグラウンド復帰時にステータスを再計算
   useEffect(() => {
@@ -53,21 +65,52 @@ export const PatientsProvider: React.FC<PatientsProviderProps> = ({ children }) 
     return () => clearInterval(interval);
   }, []);
 
+  const reloadPatients = useCallback(async (): Promise<void> => {
+    setIsLoading(true);
+    setLoadError(null);
+
+    const result = await loadPatients();
+    if (result.success) {
+      setPatientsState(result.data);
+    } else {
+      setLoadError("患者データの読み込みに失敗しました。");
+    }
+
+    setIsLoading(false);
+  }, [setPatientsState]);
+
+  const persistPatients = useCallback(async (nextPatients: Patient[]): Promise<boolean> => {
+    setIsSaving(true);
+    try {
+      const result = await savePatients(nextPatients);
+      if (result.success) {
+        setSaveError(null);
+        return true;
+      }
+
+      setSaveError({
+        message: "患者データの保存に失敗しました。",
+        reason: result.error?.message || "ローカルストレージへの保存に失敗しました。",
+        failedAt: new Date().toISOString(),
+      });
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
+  }, []);
+
+  const retrySavePatients = useCallback(async (): Promise<boolean> => {
+    return persistPatients(patientsRef.current);
+  }, [persistPatients]);
+
   // 初期読み込み
   useEffect(() => {
-    const load = async () => {
-      const result = await loadPatients();
-      if (result.success) {
-        setPatients(result.data);
-      }
-      setIsLoading(false);
-    };
-    load();
-  }, []);
+    reloadPatients();
+  }, [reloadPatients]);
 
   // 患者を追加
   const addPatient = useCallback(
-    async (patientData: PatientCreateData): Promise<Patient> => {
+    async (patientData: PatientCreateData): Promise<PatientMutationResult> => {
       const newPatient: Patient = {
         id: Crypto.randomUUID(),
         roomNumber: patientData.roomNumber || "",
@@ -87,36 +130,36 @@ export const PatientsProvider: React.FC<PatientsProviderProps> = ({ children }) 
         updatedAt: new Date().toISOString(),
       };
 
-      const updatedPatients = [...patients, newPatient];
-      setPatients(updatedPatients);
-      await savePatients(updatedPatients);
-      return newPatient;
+      const updatedPatients = [...patientsRef.current, newPatient];
+      setPatientsState(updatedPatients);
+      const saved = await persistPatients(updatedPatients);
+      return { patient: newPatient, saved };
     },
-    [patients]
+    [persistPatients, setPatientsState]
   );
 
   // 患者を更新
   const updatePatient = useCallback(
-    async (id: string, updates: PatientUpdateData): Promise<void> => {
-      const updatedPatients = patients.map((patient) =>
+    async (id: string, updates: PatientUpdateData): Promise<boolean> => {
+      const updatedPatients = patientsRef.current.map((patient) =>
         patient.id === id
           ? { ...patient, ...updates, updatedAt: new Date().toISOString() }
           : patient
       );
-      setPatients(updatedPatients);
-      await savePatients(updatedPatients);
+      setPatientsState(updatedPatients);
+      return persistPatients(updatedPatients);
     },
-    [patients]
+    [persistPatients, setPatientsState]
   );
 
   // 患者を削除
   const deletePatient = useCallback(
-    async (id: string): Promise<void> => {
-      const updatedPatients = patients.filter((patient) => patient.id !== id);
-      setPatients(updatedPatients);
-      await savePatients(updatedPatients);
+    async (id: string): Promise<boolean> => {
+      const updatedPatients = patientsRef.current.filter((patient) => patient.id !== id);
+      setPatientsState(updatedPatients);
+      return persistPatients(updatedPatients);
     },
-    [patients]
+    [persistPatients, setPatientsState]
   );
 
   // IDで患者を取得（ステータス付き）
@@ -135,26 +178,35 @@ export const PatientsProvider: React.FC<PatientsProviderProps> = ({ children }) 
 
   // 点滴を開始
   const startPatient = useCallback(
-    async (id: string, endTime: Date): Promise<void> => {
-      await updatePatient(id, {
+    async (id: string, endTime: Date): Promise<boolean> => {
+      const saved = await updatePatient(id, {
         isRunning: true,
         startedAt: new Date().toISOString(),
         endTime: endTime.toISOString(),
       });
+
+      const patient = patientsRef.current.find((p) => p.id === id);
+      if (patient?.notificationEnabled) {
+        await scheduleForPatient(id, endTime, patient.notificationTiming.minutes);
+      }
+      return saved;
     },
-    [updatePatient]
+    [updatePatient, scheduleForPatient]
   );
 
   // 点滴を停止
   const stopPatient = useCallback(
-    async (id: string): Promise<void> => {
-      await updatePatient(id, {
+    async (id: string): Promise<boolean> => {
+      const saved = await updatePatient(id, {
         isRunning: false,
         startedAt: null,
         endTime: null,
       });
+
+      await cancelForPatient(id);
+      return saved;
     },
-    [updatePatient]
+    [updatePatient, cancelForPatient]
   );
 
   // ステータス計算済み患者リスト
@@ -170,12 +222,17 @@ export const PatientsProvider: React.FC<PatientsProviderProps> = ({ children }) 
   const value: PatientsContextValue = {
     patients: patientsWithStatus,
     isLoading,
+    isSaving,
+    loadError,
+    saveError,
     addPatient,
     updatePatient,
     deletePatient,
     getPatient,
     startPatient,
     stopPatient,
+    reloadPatients,
+    retrySavePatients,
   };
 
   return <PatientsContext.Provider value={value}>{children}</PatientsContext.Provider>;

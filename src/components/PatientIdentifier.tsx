@@ -33,6 +33,7 @@ export const PatientIdentifier: React.FC<PatientIdentifierProps> = ({
             keyboardType="number-pad"
             maxLength={3}
             editable={!disabled}
+            accessibilityLabel="号室番号"
           />
         </View>
         <View style={styles.inputGroup}>
@@ -46,6 +47,7 @@ export const PatientIdentifier: React.FC<PatientIdentifierProps> = ({
             keyboardType="number-pad"
             maxLength={1}
             editable={!disabled}
+            accessibilityLabel="ベッド番号"
           />
         </View>
       </View>

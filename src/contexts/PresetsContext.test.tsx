@@ -72,6 +72,73 @@ describe("PresetsContext", () => {
 
       expect(result.current.presets[0].name).toBe("生理食塩水");
     });
+
+    test("読み込み失敗時はloadErrorを設定", async () => {
+      (loadPresets as jest.Mock).mockResolvedValue({
+        success: false,
+        data: [],
+      });
+
+      const { result } = renderHook(() => usePresets(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.loadError).toBe("プリセットの読み込みに失敗しました。");
+    });
+
+    test("保存失敗時はsaveErrorを設定", async () => {
+      (savePresets as jest.Mock).mockResolvedValueOnce({ success: false });
+
+      const { result } = renderHook(() => usePresets(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      await act(async () => {
+        await result.current.addPreset({
+          name: "テスト",
+          infusionSet: INFUSION_SETS.ADULT,
+          volume: "500",
+          hours: "1",
+          minutes: "0",
+        });
+      });
+
+      expect(result.current.saveError?.message).toBe("プリセットの保存に失敗しました。");
+      expect(result.current.saveError?.reason).toBe("ローカルストレージへの保存に失敗しました。");
+    });
+
+    test("retrySavePresetsで現在のstateを再保存できる", async () => {
+      (savePresets as jest.Mock)
+        .mockResolvedValueOnce({ success: false })
+        .mockResolvedValueOnce({ success: true });
+
+      const { result } = renderHook(() => usePresets(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      await act(async () => {
+        await result.current.addPreset({
+          name: "テスト",
+          infusionSet: INFUSION_SETS.ADULT,
+          volume: "500",
+          hours: "1",
+          minutes: "0",
+        });
+      });
+
+      await act(async () => {
+        await result.current.retrySavePresets();
+      });
+
+      expect(savePresets).toHaveBeenCalledTimes(2);
+      expect(result.current.saveError).toBeNull();
+    });
   });
 
   describe("addPreset", () => {
@@ -93,8 +160,9 @@ describe("PresetsContext", () => {
         });
       });
 
-      expect(newPreset.name).toBe("テストプリセット");
-      expect(newPreset.infusionSet).toEqual(INFUSION_SETS.PEDIATRIC);
+      expect(newPreset.preset.name).toBe("テストプリセット");
+      expect(newPreset.preset.infusionSet).toEqual(INFUSION_SETS.PEDIATRIC);
+      expect(newPreset.saved).toBe(true);
       expect(result.current.presets).toHaveLength(1);
       expect(savePresets).toHaveBeenCalled();
     });
@@ -201,6 +269,40 @@ describe("PresetsContext", () => {
       });
 
       expect(result.current.getPreset("nonexistent")).toBeUndefined();
+    });
+  });
+
+  describe("reloadPresets", () => {
+    test("再読み込みで最新データを取得", async () => {
+      const { result } = renderHook(() => usePresets(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      (loadPresets as jest.Mock).mockResolvedValueOnce({
+        success: true,
+        data: [
+          {
+            id: "reloaded-preset",
+            name: "再読込",
+            infusionSet: INFUSION_SETS.ADULT,
+            volume: "500",
+            hours: "2",
+            minutes: "0",
+            createdAt: "2024-01-15T10:00:00.000Z",
+            updatedAt: "2024-01-15T10:00:00.000Z",
+          },
+        ],
+      });
+
+      await act(async () => {
+        await result.current.reloadPresets();
+      });
+
+      expect(result.current.loadError).toBeNull();
+      expect(result.current.presets).toHaveLength(1);
+      expect(result.current.presets[0].id).toBe("reloaded-preset");
     });
   });
 });

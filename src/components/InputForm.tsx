@@ -58,6 +58,7 @@ export const InputForm: React.FC<InputFormProps> = ({
             placeholderTextColor={colors.border}
             maxLength={4}
             editable={!disabled}
+            accessibilityLabel="輸液量（mL）"
           />
           <Text style={styles.unit}>mL</Text>
         </View>
@@ -77,6 +78,7 @@ export const InputForm: React.FC<InputFormProps> = ({
               placeholderTextColor={colors.border}
               maxLength={2}
               editable={!disabled}
+              accessibilityLabel="投与時間（時間）"
             />
             <Text style={styles.unit}>時間</Text>
           </View>
@@ -90,6 +92,7 @@ export const InputForm: React.FC<InputFormProps> = ({
               placeholderTextColor={colors.border}
               maxLength={2}
               editable={!disabled}
+              accessibilityLabel="投与時間（分）"
             />
             <Text style={styles.unit}>分</Text>
           </View>

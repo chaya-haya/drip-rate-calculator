@@ -26,8 +26,8 @@ export const isWatchCommand = (msg: unknown): msg is WatchCommand => {
 
 interface UseWatchSyncOptions {
   patients: PatientWithStatus[];
-  startPatient: (id: string, endTime: Date) => Promise<void>;
-  stopPatient: (id: string) => Promise<void>;
+  startPatient: (id: string, endTime: Date) => Promise<boolean>;
+  stopPatient: (id: string) => Promise<boolean>;
 }
 
 // 患者データをApple Watchと同期するフック

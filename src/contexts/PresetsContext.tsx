@@ -4,13 +4,14 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useRef,
   ReactNode,
 } from "react";
 import * as Crypto from "expo-crypto";
 import { savePresets, loadPresets } from "../lib/storage";
 import { createPreset, updatePresetData } from "../features/presets/logic";
 import type { Preset, PresetCreateData, PresetUpdateData } from "../types";
-import type { PresetsContextValue } from "../types/context";
+import type { PresetMutationResult, PresetsContextValue, SaveErrorInfo } from "../types/context";
 
 const PresetsContext = createContext<PresetsContextValue | null>(null);
 
@@ -29,57 +30,93 @@ interface PresetsProviderProps {
 export const PresetsProvider: React.FC<PresetsProviderProps> = ({ children }) => {
   const [presets, setPresets] = useState<Preset[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<SaveErrorInfo | null>(null);
+  const presetsRef = useRef<Preset[]>([]);
+
+  const setPresetsState = useCallback((nextPresets: Preset[]) => {
+    presetsRef.current = nextPresets;
+    setPresets(nextPresets);
+  }, []);
+
+  const reloadPresets = useCallback(async (): Promise<void> => {
+    setIsLoading(true);
+    setLoadError(null);
+
+    const result = await loadPresets();
+    if (result.success) {
+      setPresetsState(result.data);
+    } else {
+      setLoadError("プリセットの読み込みに失敗しました。");
+    }
+
+    setIsLoading(false);
+  }, [setPresetsState]);
+
+  const persistPresets = useCallback(async (nextPresets: Preset[]): Promise<boolean> => {
+    setIsSaving(true);
+    try {
+      const result = await savePresets(nextPresets);
+      if (result.success) {
+        setSaveError(null);
+        return true;
+      }
+
+      setSaveError({
+        message: "プリセットの保存に失敗しました。",
+        reason: result.error?.message || "ローカルストレージへの保存に失敗しました。",
+        failedAt: new Date().toISOString(),
+      });
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
+  }, []);
+
+  const retrySavePresets = useCallback(async (): Promise<boolean> => {
+    return persistPresets(presetsRef.current);
+  }, [persistPresets]);
 
   // 初期読み込み
   useEffect(() => {
-    const load = async () => {
-      const result = await loadPresets();
-      if (result.success) {
-        setPresets(result.data);
-      }
-      setIsLoading(false);
-    };
-    load();
-  }, []);
+    reloadPresets();
+  }, [reloadPresets]);
 
   // プリセットを追加
   const addPreset = useCallback(
-    async (presetData: PresetCreateData): Promise<Preset> => {
-      const newPreset = createPreset(
-        Crypto.randomUUID(),
-        presetData,
-        new Date().toISOString()
-      );
+    async (presetData: PresetCreateData): Promise<PresetMutationResult> => {
+      const newPreset = createPreset(Crypto.randomUUID(), presetData, new Date().toISOString());
 
-      const updatedPresets = [...presets, newPreset];
-      setPresets(updatedPresets);
-      await savePresets(updatedPresets);
-      return newPreset;
+      const updatedPresets = [...presetsRef.current, newPreset];
+      setPresetsState(updatedPresets);
+      const saved = await persistPresets(updatedPresets);
+      return { preset: newPreset, saved };
     },
-    [presets]
+    [persistPresets, setPresetsState]
   );
 
   // プリセットを更新
   const updatePreset = useCallback(
-    async (id: string, updates: PresetUpdateData): Promise<void> => {
+    async (id: string, updates: PresetUpdateData): Promise<boolean> => {
       const now = new Date().toISOString();
-      const updatedPresets = presets.map((preset) =>
+      const updatedPresets = presetsRef.current.map((preset) =>
         preset.id === id ? updatePresetData(preset, updates, now) : preset
       );
-      setPresets(updatedPresets);
-      await savePresets(updatedPresets);
+      setPresetsState(updatedPresets);
+      return persistPresets(updatedPresets);
     },
-    [presets]
+    [persistPresets, setPresetsState]
   );
 
   // プリセットを削除
   const deletePreset = useCallback(
-    async (id: string): Promise<void> => {
-      const updatedPresets = presets.filter((preset) => preset.id !== id);
-      setPresets(updatedPresets);
-      await savePresets(updatedPresets);
+    async (id: string): Promise<boolean> => {
+      const updatedPresets = presetsRef.current.filter((preset) => preset.id !== id);
+      setPresetsState(updatedPresets);
+      return persistPresets(updatedPresets);
     },
-    [presets]
+    [persistPresets, setPresetsState]
   );
 
   // IDでプリセットを取得
@@ -93,10 +130,15 @@ export const PresetsProvider: React.FC<PresetsProviderProps> = ({ children }) =>
   const value: PresetsContextValue = {
     presets,
     isLoading,
+    isSaving,
+    loadError,
+    saveError,
     addPreset,
     updatePreset,
     deletePreset,
     getPreset,
+    reloadPresets,
+    retrySavePresets,
   };
 
   return <PresetsContext.Provider value={value}>{children}</PresetsContext.Provider>;

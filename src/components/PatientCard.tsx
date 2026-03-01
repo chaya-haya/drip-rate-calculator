@@ -70,8 +70,22 @@ export const PatientCard: React.FC<PatientCardProps> = ({ patient, onPress }) =>
   const remainingText = formatRemainingTime(localRemainingTime);
   const endTimeText = patient.endTime ? formatTime(new Date(patient.endTime)) : null;
 
+  // アクセシビリティ用ラベル
+  const accessibilityDescription = patient.isRunning
+    ? `${patientName}、${patient.status.label}、残り${remainingText || "不明"}`
+    : `${patientName}、${patient.status.label}`;
+
+  const isRunningCard = patient.isRunning || patient.status.id === "ending_soon";
+
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity
+      style={[styles.card, isRunningCard && styles.cardRunning]}
+      onPress={onPress}
+      activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityDescription}
+      accessibilityHint="タップして患者詳細を表示"
+    >
       <View style={styles.header}>
         <Text style={styles.name} numberOfLines={1}>
           {patientName}
@@ -109,6 +123,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
+  },
+  cardRunning: {
+    backgroundColor: "#E3F2FD",
+    borderLeftWidth: 4,
+    borderLeftColor: colors.primary,
   },
   header: {
     flexDirection: "row",

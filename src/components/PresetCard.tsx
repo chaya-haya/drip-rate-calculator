@@ -16,12 +16,20 @@ export const PresetCard: React.FC<PresetCardProps> = ({ preset, onSelect, onEdit
   const timeText = `${preset.hours || 0}時間${preset.minutes || 0}分`;
 
   return (
-    <View style={styles.card}>
+    <View
+      style={styles.card}
+      accessibilityLabel={`プリセット: ${preset.name}、${infusionSetName}、${preset.volume}mL、${timeText}`}
+    >
       <View style={styles.header}>
         <Text style={styles.name} numberOfLines={1}>
           {preset.name}
         </Text>
-        <TouchableOpacity onPress={() => onEdit(preset)} style={styles.editButton}>
+        <TouchableOpacity
+          onPress={() => onEdit(preset)}
+          style={styles.editButton}
+          accessibilityRole="button"
+          accessibilityLabel={`${preset.name}を編集`}
+        >
           <Text style={styles.editText}>編集</Text>
         </TouchableOpacity>
       </View>
@@ -35,6 +43,8 @@ export const PresetCard: React.FC<PresetCardProps> = ({ preset, onSelect, onEdit
           style={styles.selectButton}
           onPress={() => onSelect(preset)}
           activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={`${preset.name}の設定を使用`}
         >
           <Text style={styles.selectButtonText}>この設定を使用</Text>
         </TouchableOpacity>
@@ -42,6 +52,8 @@ export const PresetCard: React.FC<PresetCardProps> = ({ preset, onSelect, onEdit
           style={styles.deleteButton}
           onPress={() => onDelete(preset.id)}
           activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={`${preset.name}を削除`}
         >
           <Text style={styles.deleteButtonText}>削除</Text>
         </TouchableOpacity>
