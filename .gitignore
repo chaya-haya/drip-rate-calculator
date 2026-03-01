@@ -4,3 +4,4 @@ dist/
 ios/
 .env
 .claude/settings.local.json
+coverage/
