@@ -29,18 +29,25 @@ struct WatchPatient: Identifiable, Codable {
   }
 
   /// 投与状態と時間に基づく現在のステータス
+  /// endTimeが過去なら、isRunningに関わらず完了とみなす
   var status: PatientStatus {
-    guard isRunning, let endTime = endTime else {
-      return .waiting
+    if let endTime = endTime {
+      let remaining = endTime.timeIntervalSinceNow
+      // endTimeが過去 → 完了（自動完了 or タイマー超過）
+      if remaining <= 0 {
+        return .completed
+      }
+      // isRunning=false で endTime が未来 → 待機中（同期直後の中間状態）
+      guard isRunning else {
+        return .waiting
+      }
+      if remaining <= 5 * 60 { // 5分以内
+        return .endingSoon
+      }
+      return .running
     }
-    let remaining = endTime.timeIntervalSinceNow
-    if remaining <= 0 {
-      return .completed
-    }
-    if remaining <= 5 * 60 { // 5分
-      return .endingSoon
-    }
-    return .running
+    // endTime == nil → 待機中
+    return .waiting
   }
 
   /// 残り時間（秒）。投与中でなければnil
