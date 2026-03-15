@@ -3,10 +3,10 @@
 <plist version="1.0">
   <dict>
     <key>CFBundleDisplayName</key>
-    <string>DripWatch</string>
+    <string>てきかる</string>
     <key>WKApplication</key>
     <true/>
     <key>WKCompanionAppBundleIdentifier</key>
-    <string>com.dripcalculator.app</string>
+    <string>com.tekikaru.app</string>
   </dict>
 </plist>

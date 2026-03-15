@@ -15,7 +15,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
 
   return {
     ...config,
-    name: "点滴滴下数計算",
+    name: "てきかる",
     slug: "drip-rate-calculator",
     version: "1.0.0",
     orientation: "portrait",
@@ -30,7 +30,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     ios: {
       supportsTablet: false,
-      bundleIdentifier: "com.dripcalculator.app",
+      bundleIdentifier: "com.tekikaru.app",
       buildNumber: "1",
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
