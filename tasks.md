@@ -1,13 +1,3 @@
-# ios/ を GitHub に push して別Macでビルドできるようにする
-
-## Phase: .gitignore から ios/ を削除して push
-
-- [x] .gitignore から `ios/` の行を削除
-- [x] `git add .gitignore ios/` でステージング
-- [ ] コミット＆push
-
----
-
 # iOS リリース準備チェックリスト
 
 ## Phase 0: アプリ名変更
