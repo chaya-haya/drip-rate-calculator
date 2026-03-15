@@ -2,6 +2,7 @@ node_modules/
 .expo/
 dist/
 ios/
+android/
 .env
 .claude/settings.local.json
 coverage/
